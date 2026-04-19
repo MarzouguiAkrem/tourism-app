@@ -1,0 +1,98 @@
+module.exports = [
+  {
+    name: { fr: 'Histoire & Patrimoine', en: 'History & Heritage', ar: 'التاريخ والتراث' },
+    slug: 'histoire-patrimoine',
+    description: {
+      fr: 'Sites historiques, monuments antiques, patrimoine UNESCO',
+      en: 'Historical sites, ancient monuments, UNESCO heritage',
+      ar: 'المواقع التاريخية والمعالم القديمة والتراث العالمي',
+    },
+    icon: 'library',
+    color: '#C19A6B',
+    order: 1,
+  },
+  {
+    name: { fr: 'Plages & Mer', en: 'Beaches & Sea', ar: 'الشواطئ والبحر' },
+    slug: 'plages-mer',
+    description: {
+      fr: 'Plages méditerranéennes, stations balnéaires, îles',
+      en: 'Mediterranean beaches, seaside resorts, islands',
+      ar: 'شواطئ البحر الأبيض المتوسط والمنتجعات الساحلية',
+    },
+    icon: 'water',
+    color: '#0077B6',
+    order: 2,
+  },
+  {
+    name: { fr: 'Désert & Sahara', en: 'Desert & Sahara', ar: 'الصحراء' },
+    slug: 'desert-sahara',
+    description: {
+      fr: 'Dunes, oasis, expéditions sahariennes',
+      en: 'Dunes, oases, Saharan expeditions',
+      ar: 'الكثبان الرملية والواحات ورحلات الصحراء',
+    },
+    icon: 'sunny',
+    color: '#E9C46A',
+    order: 3,
+  },
+  {
+    name: { fr: 'Musées', en: 'Museums', ar: 'المتاحف' },
+    slug: 'musees',
+    description: {
+      fr: 'Musées archéologiques, ethnographiques et d\'art',
+      en: 'Archaeological, ethnographic and art museums',
+      ar: 'متاحف الآثار والإثنوغرافيا والفنون',
+    },
+    icon: 'business',
+    color: '#6A4C93',
+    order: 4,
+  },
+  {
+    name: { fr: 'Médinas & Souks', en: 'Medinas & Souks', ar: 'المدن العتيقة والأسواق' },
+    slug: 'medinas-souks',
+    description: {
+      fr: 'Vieilles villes, artisanat, marchés traditionnels',
+      en: 'Old cities, crafts, traditional markets',
+      ar: 'المدن العتيقة والحرف التقليدية والأسواق',
+    },
+    icon: 'storefront',
+    color: '#E76F51',
+    order: 5,
+  },
+  {
+    name: { fr: 'Nature & Parcs', en: 'Nature & Parks', ar: 'الطبيعة والحدائق' },
+    slug: 'nature-parcs',
+    description: {
+      fr: 'Parcs nationaux, montagnes, réserves naturelles',
+      en: 'National parks, mountains, nature reserves',
+      ar: 'الحدائق الوطنية والجبال والمحميات الطبيعية',
+    },
+    icon: 'leaf',
+    color: '#2A9D8F',
+    order: 6,
+  },
+  {
+    name: { fr: 'Religieux', en: 'Religious', ar: 'ديني' },
+    slug: 'religieux',
+    description: {
+      fr: 'Mosquées, églises, synagogues et lieux sacrés',
+      en: 'Mosques, churches, synagogues and sacred places',
+      ar: 'المساجد والكنائس والمعابد والأماكن المقدسة',
+    },
+    icon: 'moon',
+    color: '#264653',
+    order: 7,
+  },
+  {
+    name: { fr: 'Gastronomie', en: 'Food & Dining', ar: 'المطبخ' },
+    slug: 'gastronomie',
+    description: {
+      fr: 'Restaurants, spécialités locales, cuisine tunisienne',
+      en: 'Restaurants, local specialties, Tunisian cuisine',
+      ar: 'المطاعم والأطباق المحلية والمطبخ التونسي',
+    },
+    icon: 'restaurant',
+    color: '#F4A261',
+    order: 8,
+  },
+];
