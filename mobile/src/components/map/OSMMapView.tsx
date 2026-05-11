@@ -8,10 +8,20 @@ export interface OSMMarker {
   longitude: number;
   title?: string;
   subtitle?: string;
+  /** Optional 1-based label shown inside the marker (e.g., stop order) */
+  label?: number | string;
+}
+
+export interface OSMPolyline {
+  /** [latitude, longitude] pairs */
+  coordinates: Array<[number, number]>;
+  color?: string;
+  weight?: number;
 }
 
 interface Props {
   markers: OSMMarker[];
+  polyline?: OSMPolyline;
   /** Initial center if there are no markers */
   initialRegion?: { latitude: number; longitude: number; zoom?: number };
   onMarkerPress?: (id: string) => void;
@@ -20,9 +30,14 @@ interface Props {
 
 const TUNISIA_CENTER = { latitude: 34.0, longitude: 9.0, zoom: 6 };
 
-const buildHtml = (markers: OSMMarker[], region: { latitude: number; longitude: number; zoom: number }) => {
+const buildHtml = (
+  markers: OSMMarker[],
+  region: { latitude: number; longitude: number; zoom: number },
+  polyline?: OSMPolyline
+) => {
   // Escape the JSON safely for embedding in <script>
   const markersJson = JSON.stringify(markers).replace(/</g, '\\u003c');
+  const polylineJson = JSON.stringify(polyline || null).replace(/</g, '\\u003c');
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -34,6 +49,13 @@ const buildHtml = (markers: OSMMarker[], region: { latitude: number; longitude: 
     .leaflet-popup-content { font: 14px -apple-system, system-ui, sans-serif; margin: 8px 12px; }
     .leaflet-popup-content b { display: block; margin-bottom: 2px; color: #1B4D8E; }
     .leaflet-popup-content small { color: #6B7280; }
+    .order-marker {
+      width: 28px; height: 28px; border-radius: 14px; background: #1B4D8E;
+      color: #fff; font: 700 14px -apple-system, system-ui, sans-serif;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+      border: 2px solid #fff;
+    }
   </style>
 </head>
 <body>
@@ -56,9 +78,22 @@ const buildHtml = (markers: OSMMarker[], region: { latitude: number; longitude: 
         }
       };
 
+      var polylineData = ${polylineJson};
       var bounds = [];
+
       markers.forEach(function (m) {
-        var marker = L.marker([m.latitude, m.longitude]).addTo(map);
+        var marker;
+        if (m.label !== undefined && m.label !== null) {
+          var icon = L.divIcon({
+            className: 'order-marker-wrap',
+            html: '<div class="order-marker">' + m.label + '</div>',
+            iconSize: [28, 28],
+            iconAnchor: [14, 14]
+          });
+          marker = L.marker([m.latitude, m.longitude], { icon: icon }).addTo(map);
+        } else {
+          marker = L.marker([m.latitude, m.longitude]).addTo(map);
+        }
         var html = '';
         if (m.title) html += '<b>' + m.title + '</b>';
         if (m.subtitle) html += '<small>' + m.subtitle + '</small>';
@@ -66,6 +101,16 @@ const buildHtml = (markers: OSMMarker[], region: { latitude: number; longitude: 
         marker.on('click', function () { send({ type: 'marker', id: m.id }); });
         bounds.push([m.latitude, m.longitude]);
       });
+
+      if (polylineData && polylineData.coordinates && polylineData.coordinates.length > 1) {
+        L.polyline(polylineData.coordinates, {
+          color: polylineData.color || '#C75B39',
+          weight: polylineData.weight || 4,
+          opacity: 0.85,
+          dashArray: '6, 8',
+          lineCap: 'round'
+        }).addTo(map);
+      }
 
       if (bounds.length > 1) {
         map.fitBounds(bounds, { padding: [40, 40] });
@@ -82,6 +127,7 @@ const buildHtml = (markers: OSMMarker[], region: { latitude: number; longitude: 
 
 export default function OSMMapView({
   markers,
+  polyline,
   initialRegion,
   onMarkerPress,
   style,
@@ -93,7 +139,10 @@ export default function OSMMapView({
     zoom: initialRegion?.zoom ?? TUNISIA_CENTER.zoom,
   };
 
-  const html = useMemo(() => buildHtml(markers, region), [markers, region.latitude, region.longitude, region.zoom]);
+  const html = useMemo(
+    () => buildHtml(markers, region, polyline),
+    [markers, polyline, region.latitude, region.longitude, region.zoom]
+  );
 
   const onMessage = (e: WebViewMessageEvent) => {
     try {

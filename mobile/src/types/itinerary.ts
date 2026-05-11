@@ -1,36 +1,22 @@
-export interface ItineraryPlace {
-  place: string; // Place ID or populated Place
-  order: number;
-  startTime: string;
-  endTime: string;
-  travelTimeFromPrev: number;
-  notes?: string;
-}
+import { GeoPoint, Place, PriceLevel } from './place';
 
-export interface ItineraryMeal {
-  type: 'breakfast' | 'lunch' | 'dinner';
-  suggestion: string;
+export type ItineraryStatus = 'draft' | 'active' | 'completed';
+
+export interface ItineraryStop {
+  /** ObjectId OR a populated Place (after .populate on the backend) */
+  place: string | Place;
+  order: number;
+  durationMin: number;
   estimatedCost: number;
+  note?: string;
 }
 
 export interface ItineraryDay {
   dayNumber: number;
-  date: string;
-  places: ItineraryPlace[];
-  meals: ItineraryMeal[];
-  accommodation?: {
-    name: string;
-    estimatedCost: number;
-  };
-  notes?: string;
-}
-
-export interface EstimatedBudget {
-  accommodation: number;
-  food: number;
-  transport: number;
-  activities: number;
-  total: number;
+  date?: string | null;
+  region?: string | null;
+  stops: ItineraryStop[];
+  estimatedCost: number;
 }
 
 export interface Itinerary {
@@ -38,29 +24,44 @@ export interface Itinerary {
   user: string;
   title: string;
   description?: string;
-  startDate: string;
-  endDate: string;
-  totalDays: number;
-  budgetLevel: 'budget' | 'moderate' | 'luxury';
-  estimatedBudget: EstimatedBudget;
+
+  durationDays: number;
+  budget: number;
+  budgetLevel: PriceLevel;
+  currency: string;
+
   interests: string[];
-  regions: string[];
+  startRegion?: string | null;
+  startLocation?: GeoPoint;
+  startDate?: string | null;
+
   days: ItineraryDay[];
-  isGenerated: boolean;
-  isPublic: boolean;
-  status: 'draft' | 'active' | 'completed';
+  totalCost: number;
+
+  status: ItineraryStatus;
+  generated: boolean;
+  generationParams?: Record<string, unknown> | null;
+
   createdAt: string;
   updatedAt: string;
 }
 
-export interface GenerateItineraryRequest {
-  startDate: string;
-  endDate: string;
-  interests: string[];
-  budgetLevel: 'budget' | 'moderate' | 'luxury';
+export interface GenerateItineraryPayload {
+  title?: string;
+  durationDays: number;
+  interests?: string[];
+  startRegion?: string;
   regions?: string[];
-  startLocation?: {
-    longitude: number;
-    latitude: number;
-  };
+  /** [longitude, latitude] */
+  startCoords?: [number, number];
+  budget?: number;
+  budgetLevel?: PriceLevel;
+  currency?: string;
+  startDate?: string;
+  persist?: boolean;
+}
+
+export interface GenerateItineraryResponse {
+  itinerary: Itinerary;
+  warning?: string | null;
 }
