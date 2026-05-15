@@ -25,9 +25,11 @@ import { HomeScreenProps } from '../../types/navigation';
 import FavoriteButton from '../../components/data-display/FavoriteButton';
 import ReviewItem from '../../components/data-display/ReviewItem';
 import ReviewFormModal from '../../components/feedback/ReviewFormModal';
+import Button from '../../components/common/Button';
 import { useAppSelector } from '../../store/hooks';
 
 const { width: SCREEN_W } = Dimensions.get('window');
+const HERO_HEIGHT = 300;
 
 const DAY_LABELS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
 const PRICE_LABEL: Record<string, string> = {
@@ -47,7 +49,6 @@ export default function PlaceDetailScreen({
   const [place, setPlace] = useState<Place | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [galleryIndex, setGalleryIndex] = useState(0);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewsCount, setReviewsCount] = useState(0);
   const [reviewModal, setReviewModal] = useState(false);
@@ -76,7 +77,6 @@ export default function PlaceDetailScreen({
   const handleReviewCreated = (review: Review) => {
     setReviews((prev) => [review, ...prev]);
     setReviewsCount((c) => c + 1);
-    // Optimistic local update of average — backend recalcs on its side
     if (place) {
       const newCount = (place.rating?.count || 0) + 1;
       const newAvg =
@@ -101,8 +101,8 @@ export default function PlaceDetailScreen({
     );
   }
 
-  const images = (place.images?.length ? place.images : [place.coverImage]).filter(Boolean) as string[];
-  const gallery = images.length > 0 ? images : [null];
+  const hero = resolveImageUrl(place.coverImage || place.images?.[0]);
+  const galleryImages = (place.images || []).filter((x) => x && x !== place.coverImage);
 
   const openMaps = () => {
     const [lng, lat] = place.location.coordinates;
@@ -121,84 +121,65 @@ export default function PlaceDetailScreen({
       message: `${tr(place.name)} — ${tr(place.shortDescription)}`,
     });
 
+  const priceText =
+    place.priceRange && (place.priceRange.min || place.priceRange.max)
+      ? `${place.priceRange.min ?? '?'}–${place.priceRange.max ?? '?'} ${place.priceRange.currency || 'TND'}`
+      : t('free');
+
   return (
     <View style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Gallery */}
-        <View style={styles.galleryWrap}>
-          <ScrollView
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onMomentumScrollEnd={(e) =>
-              setGalleryIndex(Math.round(e.nativeEvent.contentOffset.x / SCREEN_W))
-            }
-          >
-            {gallery.map((img, idx) => (
-              <Image
-                key={idx}
-                source={{ uri: resolveImageUrl(img) }}
-                style={styles.galleryImage}
-              />
-            ))}
-          </ScrollView>
-          {gallery.length > 1 && (
-            <View style={styles.dots}>
-              {gallery.map((_, i) => (
-                <View
-                  key={i}
-                  style={[
-                    styles.dot,
-                    i === galleryIndex && styles.dotActive,
-                  ]}
-                />
-              ))}
-            </View>
-          )}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 100 }}
+      >
+        {/* Hero image with overlays */}
+        <View style={styles.hero}>
+          <Image source={{ uri: hero }} style={styles.heroImage} />
 
-          {/* Floating buttons */}
-          <TouchableOpacity style={[styles.floatingBtn, { left: spacing.base }]} onPress={() => navigation.goBack()}>
+          {/* Top-left back button */}
+          <TouchableOpacity
+            style={[styles.floatingBtn, styles.topLeft]}
+            onPress={() => navigation.goBack()}
+          >
             <Ionicons name="arrow-back" size={22} color={palette.gray900} />
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.floatingBtn, { right: spacing.base + 50 }]} onPress={onShare}>
-            <Ionicons name="share-outline" size={22} color={palette.gray900} />
-          </TouchableOpacity>
-          <FavoriteButton
-            placeId={place._id}
-            size={24}
-            style={[styles.floatingBtn, { right: spacing.base }]}
-          />
+
+          {/* Top-right share + favorite */}
+          <View style={styles.topRightStack}>
+            <TouchableOpacity style={styles.floatingBtn} onPress={onShare}>
+              <Ionicons name="share-outline" size={22} color={palette.gray900} />
+            </TouchableOpacity>
+            <FavoriteButton placeId={place._id} size={22} style={styles.floatingBtn} />
+          </View>
+
+          {/* Rating overlay */}
+          <View style={styles.ratingOverlay}>
+            <Ionicons name="star" size={16} color={palette.gold} fill={palette.gold as any} />
+            <Text style={styles.ratingText}>
+              {place.rating?.average?.toFixed(1) || '0.0'}
+            </Text>
+          </View>
         </View>
 
-        {/* Header info */}
-        <View style={styles.section}>
+        {/* Title + location */}
+        <View style={styles.titleBlock}>
           <Text style={styles.title}>{tr(place.name)}</Text>
-          <View style={styles.metaRow}>
-            <View style={styles.metaItem}>
-              <Ionicons name="star" size={16} color={palette.gold} />
-              <Text style={styles.metaStrong}>
-                {place.rating?.average?.toFixed(1) || '0.0'}
-              </Text>
-              <Text style={styles.metaMuted}>
-                ({place.rating?.count || 0} {t('reviews').toLowerCase()})
-              </Text>
-            </View>
-            <Text style={styles.metaDot}>•</Text>
-            <Text style={styles.metaMuted}>{place.region}</Text>
-            <Text style={styles.metaDot}>•</Text>
+          <View style={styles.locationRow}>
+            <Ionicons name="location" size={16} color={palette.mediterraneanBlue} />
+            <Text style={styles.locationText}>{place.region}</Text>
+            <Text style={styles.metaDot}>·</Text>
             <Text style={styles.priceTag}>{PRICE_LABEL[place.priceLevel]}</Text>
+            <Text style={styles.metaDot}>·</Text>
+            <Text style={styles.metaMuted}>
+              ({place.rating?.count || 0} {t('reviews').toLowerCase()})
+            </Text>
           </View>
           {!!place.address && (
-            <View style={[styles.metaRow, { marginTop: spacing.xs }]}>
-              <Ionicons name="location-outline" size={16} color={palette.gray500} />
+            <View style={[styles.locationRow, { marginTop: spacing.xs }]}>
+              <Ionicons name="map-outline" size={14} color={palette.gray500} />
               <Text style={styles.metaMuted}>{place.address}</Text>
             </View>
           )}
-        </View>
-
-        {/* Action buttons */}
-        <View style={styles.actionsRow}>
-          <ActionButton icon="map" label={t('getDirections')} onPress={openMaps} primary />
         </View>
 
         {/* Description */}
@@ -206,6 +187,22 @@ export default function PlaceDetailScreen({
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('description')}</Text>
             <Text style={styles.body}>{tr(place.description)}</Text>
+          </View>
+        )}
+
+        {/* Gallery */}
+        {galleryImages.length > 0 && (
+          <View style={[styles.section, { paddingRight: 0 }]}>
+            <Text style={styles.sectionTitle}>Galerie</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {galleryImages.map((img, i) => (
+                <Image
+                  key={i}
+                  source={{ uri: resolveImageUrl(img) }}
+                  style={styles.galleryImage}
+                />
+              ))}
+            </ScrollView>
           </View>
         )}
 
@@ -221,17 +218,6 @@ export default function PlaceDetailScreen({
                 </Text>
               </View>
             ))}
-          </View>
-        )}
-
-        {/* Price */}
-        {place.priceRange && (place.priceRange.min || place.priceRange.max) && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('entryFee')}</Text>
-            <Text style={styles.body}>
-              {place.priceRange.min ?? '?'} – {place.priceRange.max ?? '?'}{' '}
-              {place.priceRange.currency || 'TND'}
-            </Text>
           </View>
         )}
 
@@ -283,6 +269,20 @@ export default function PlaceDetailScreen({
         )}
       </ScrollView>
 
+      {/* Sticky footer */}
+      <View style={styles.footer}>
+        <View>
+          <Text style={styles.priceLabel}>{t('entryFee')}</Text>
+          <Text style={styles.priceValue}>{priceText}</Text>
+        </View>
+        <Button
+          title={t('getDirections')}
+          icon="navigate"
+          onPress={openMaps}
+          style={styles.directionsBtn}
+        />
+      </View>
+
       <ReviewFormModal
         visible={reviewModal}
         placeId={place._id}
@@ -290,29 +290,6 @@ export default function PlaceDetailScreen({
         onCreated={handleReviewCreated}
       />
     </View>
-  );
-}
-
-function ActionButton({
-  icon,
-  label,
-  onPress,
-  primary,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  onPress: () => void;
-  primary?: boolean;
-}) {
-  return (
-    <TouchableOpacity
-      onPress={onPress}
-      style={[styles.actionBtn, primary && styles.actionBtnPrimary]}
-      activeOpacity={0.85}
-    >
-      <Ionicons name={icon} size={18} color={primary ? palette.white : palette.mediterraneanBlue} />
-      <Text style={[styles.actionLabel, primary && styles.actionLabelPrimary]}>{label}</Text>
-    </TouchableOpacity>
   );
 }
 
@@ -334,66 +311,99 @@ function ContactRow({
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: palette.gray50 },
+  container: { flex: 1, backgroundColor: palette.white },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
   errorText: { color: palette.error, fontSize: 14 },
-  galleryWrap: { width: SCREEN_W, height: 280, backgroundColor: palette.gray200 },
-  galleryImage: { width: SCREEN_W, height: 280 },
-  dots: {
-    position: 'absolute',
-    bottom: spacing.md,
-    alignSelf: 'center',
-    flexDirection: 'row',
-    gap: 6,
+
+  // ── Hero ───────────────────────────────────────────────
+  hero: {
+    width: SCREEN_W,
+    height: HERO_HEIGHT,
+    backgroundColor: palette.gray200,
+    position: 'relative',
   },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.6)' },
-  dotActive: { backgroundColor: palette.white, width: 16 },
+  heroImage: { width: '100%', height: '100%' },
   floatingBtn: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 50 : 30,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: 'rgba(255,255,255,0.92)',
     alignItems: 'center',
     justifyContent: 'center',
     ...shadows.sm,
   },
-  section: {
-    backgroundColor: palette.white,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.lg,
-    marginTop: spacing.sm,
+  topLeft: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 52 : 24,
+    left: spacing.base,
   },
-  title: { fontSize: 22, fontWeight: '700', color: palette.gray900, marginBottom: spacing.sm },
-  metaRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
-  metaItem: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  metaStrong: { fontSize: 14, fontWeight: '600', color: palette.gray800 },
-  metaMuted: { fontSize: 13, color: palette.gray500, textTransform: 'capitalize' },
-  metaDot: { color: palette.gray400, marginHorizontal: 2 },
-  priceTag: { fontSize: 14, fontWeight: '700', color: palette.olive },
-  actionsRow: {
-    flexDirection: 'row',
+  topRightStack: {
+    position: 'absolute',
+    top: Platform.OS === 'ios' ? 52 : 24,
+    right: spacing.base,
     gap: spacing.sm,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
-    backgroundColor: palette.white,
   },
-  actionBtn: {
-    flex: 1,
+  ratingOverlay: {
+    position: 'absolute',
+    bottom: spacing.base,
+    right: spacing.base,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: borderRadius.lg,
-    backgroundColor: palette.gray100,
     gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.95)',
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
   },
-  actionBtnPrimary: { backgroundColor: palette.mediterraneanBlue },
-  actionLabel: { color: palette.mediterraneanBlue, fontWeight: '600', fontSize: 13 },
-  actionLabelPrimary: { color: palette.white },
-  sectionTitle: { fontSize: 16, fontWeight: '700', color: palette.gray900, marginBottom: spacing.sm },
-  body: { fontSize: 14, color: palette.gray700, lineHeight: 22 },
+  ratingText: { fontSize: 14, fontWeight: '700', color: palette.gray900 },
+
+  // ── Title block ────────────────────────────────────────
+  titleBlock: {
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.base,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: palette.gray900,
+    marginBottom: spacing.sm,
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    flexWrap: 'wrap',
+  },
+  locationText: {
+    fontSize: 14,
+    color: palette.gray700,
+    fontWeight: '500',
+    textTransform: 'capitalize',
+  },
+  metaDot: { color: palette.gray400, marginHorizontal: 2 },
+  metaMuted: { fontSize: 13, color: palette.gray500 },
+  priceTag: { fontSize: 14, fontWeight: '700', color: palette.olive },
+
+  // ── Sections ───────────────────────────────────────────
+  section: {
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.base,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: palette.gray900,
+    marginBottom: spacing.sm,
+  },
+  body: { fontSize: 14, color: palette.gray600, lineHeight: 22 },
+  galleryImage: {
+    width: SCREEN_W / 3 - 16,
+    height: 100,
+    borderRadius: 12,
+    marginRight: spacing.sm,
+    backgroundColor: palette.gray200,
+  },
   hourRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -401,13 +411,6 @@ const styles = StyleSheet.create({
   },
   hourDay: { fontSize: 14, fontWeight: '600', color: palette.gray800 },
   hourValue: { fontSize: 14, color: palette.gray600 },
-  contactRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-    paddingVertical: spacing.sm,
-  },
-  contactText: { fontSize: 14, color: palette.gray800 },
   reviewsHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -415,4 +418,36 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   writeReviewLink: { color: palette.mediterraneanBlue, fontWeight: '600', fontSize: 13 },
+  contactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.sm,
+  },
+  contactText: { fontSize: 14, color: palette.gray800 },
+
+  // ── Sticky footer ──────────────────────────────────────
+  footer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.md,
+    paddingBottom: Platform.OS === 'ios' ? 28 : spacing.md,
+    backgroundColor: palette.white,
+    borderTopWidth: 1,
+    borderTopColor: palette.gray100,
+  },
+  priceLabel: { fontSize: 12, color: palette.gray500 },
+  priceValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: palette.gray900,
+    marginTop: 2,
+  },
+  directionsBtn: { paddingHorizontal: spacing.xl, paddingVertical: 14 },
 });

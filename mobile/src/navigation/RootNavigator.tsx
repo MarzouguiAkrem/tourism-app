@@ -1,25 +1,27 @@
 import React, { useEffect } from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ActivityIndicator, View, StyleSheet, Text } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import NetInfo from '@react-native-community/netinfo';
 import { RootStackParamList } from '../types/navigation';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
 import { loadUser } from '../store/slices/authSlice';
 import { loadFavoriteIds, clearFavorites } from '../store/slices/favoritesSlice';
 import { palette } from '../theme';
+import { syncService } from '../services/sync.service';
 
 import OnboardingScreen from '../screens/onboarding/OnboardingScreen';
 import AuthNavigator from './AuthNavigator';
 import MainTabNavigator from './MainTabNavigator';
+import AdminStackNavigator from './AdminStackNavigator';
+import OfflineBanner from '../components/feedback/OfflineBanner';
+import AppLogo from '../components/common/AppLogo';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 function SplashLoading() {
   return (
     <View style={styles.loading}>
-      <View style={styles.splashLogo}>
-        <Ionicons name="airplane" size={48} color={palette.white} />
-      </View>
+      <AppLogo size={140} style={{ marginBottom: 16 }} />
       <Text style={styles.splashTitle}>Tunisia Travel</Text>
       <ActivityIndicator
         size="small"
@@ -48,11 +50,29 @@ export default function RootNavigator() {
     }
   }, [isAuthenticated, dispatch]);
 
+  // Phase 8: download offline bundle once authenticated; auto-flush write queue
+  // and refresh bundle when coming back online.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    syncService.ensureBundle().catch(() => {});
+    const sub = NetInfo.addEventListener((state) => {
+      if (state.isConnected && state.isInternetReachable !== false) {
+        syncService.flushQueue().catch(() => {});
+        syncService.checkVersion().then((v) => {
+          if (v.needsUpdate) syncService.downloadBundle().catch(() => {});
+        });
+      }
+    });
+    return () => sub();
+  }, [isAuthenticated]);
+
   if (isLoading) {
     return <SplashLoading />;
   }
 
   return (
+    <>
+    <OfflineBanner />
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
@@ -64,9 +84,13 @@ export default function RootNavigator() {
       ) : !isAuthenticated ? (
         <Stack.Screen name="Auth" component={AuthNavigator} />
       ) : (
-        <Stack.Screen name="Main" component={MainTabNavigator} />
+        <>
+          <Stack.Screen name="Main" component={MainTabNavigator} />
+          <Stack.Screen name="Admin" component={AdminStackNavigator} />
+        </>
       )}
     </Stack.Navigator>
+    </>
   );
 }
 
@@ -75,16 +99,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: palette.white,
-  },
-  splashLogo: {
-    width: 80,
-    height: 80,
-    borderRadius: 20,
-    backgroundColor: palette.mediterraneanBlue,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
+    backgroundColor: palette.sandLight,
   },
   splashTitle: {
     fontSize: 24,

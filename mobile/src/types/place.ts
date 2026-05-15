@@ -37,6 +37,15 @@ export interface Rating {
 
 export type PriceLevel = 'budget' | 'moderate' | 'luxury';
 export type PlaceStatus = 'published' | 'draft' | 'archived';
+export type AccommodationType =
+  | 'hotel'
+  | 'hostel'
+  | 'riad'
+  | 'guesthouse'
+  | 'apartment'
+  | 'resort'
+  | 'camping'
+  | 'ecolodge';
 
 export interface CategoryRef {
   _id: string;
@@ -68,6 +77,7 @@ export interface Place {
   coverImage: string | null;
   images: string[];
   priceLevel: PriceLevel;
+  accommodationType?: AccommodationType | null;
   priceRange?: PriceRange;
   openingHours?: OpeningHour[];
   rating: Rating;
@@ -83,6 +93,7 @@ export interface PlaceFilters {
   category?: string;
   region?: string;
   priceLevel?: PriceLevel;
+  accommodationType?: AccommodationType | AccommodationType[];
   minRating?: number;
   tags?: string[];
   search?: string;

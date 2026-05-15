@@ -11,14 +11,19 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { palette, spacing } from '../../theme';
+
+import { palette, spacing, borderRadius, shadows } from '../../theme';
 import { useAppSelector } from '../../store/hooks';
 import { Category, Place } from '../../types/place';
 import { categoriesService } from '../../services/categories.service';
 import { placesService } from '../../services/places.service';
+import { resolveImageUrl } from '../../utils/imageUrl';
 import PlaceCard from '../../components/data-display/PlaceCard';
-import CategoryCard from '../../components/data-display/CategoryCard';
+import CategoryCircle from '../../components/data-display/CategoryCircle';
+import CurrencyWidget from '../../components/data-display/CurrencyWidget';
+import SearchBar from '../../components/common/SearchBar';
 import { HomeScreenProps } from '../../types/navigation';
+import { Image } from 'react-native';
 
 export default function HomeScreen({ navigation }: HomeScreenProps<'HomeMain'>) {
   const { t } = useTranslation();
@@ -29,18 +34,18 @@ export default function HomeScreen({ navigation }: HomeScreenProps<'HomeMain'>) 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
 
   const load = useCallback(async () => {
     setError(null);
     try {
       const [cats, top] = await Promise.all([
         categoriesService.list(true),
-        placesService.topRated(8),
+        placesService.topRated(6),
       ]);
       setCategories(cats);
       setTopRated(top);
     } catch (e: any) {
-      console.log('[Home] load error', e?.message);
       setError(e?.message || t('error'));
     } finally {
       setLoading(false);
@@ -52,29 +57,64 @@ export default function HomeScreen({ navigation }: HomeScreenProps<'HomeMain'>) 
     load();
   }, [load]);
 
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    load();
-  }, [load]);
-
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView
         contentContainerStyle={styles.content}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => {
+              setRefreshing(true);
+              load();
+            }}
+            tintColor={palette.mediterraneanBlue}
+          />
+        }
         showsVerticalScrollIndicator={false}
       >
-        {/* Greeting */}
+        {/* Header: avatar + welcome + bell */}
         <View style={styles.header}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.greeting}>
-              {user?.firstName ? t('welcomeBack', { name: user.firstName }) : t('welcome')}
-            </Text>
-            <Text style={styles.subtitle}>Découvrez la Tunisie</Text>
+          <View style={styles.userBlock}>
+            <View style={styles.avatarRing}>
+              {user?.avatar ? (
+                <Image
+                  source={{ uri: resolveImageUrl(user.avatar) }}
+                  style={styles.avatar}
+                />
+              ) : (
+                <View style={[styles.avatar, styles.avatarFallback]}>
+                  <Text style={styles.avatarInitials}>
+                    {(user?.firstName?.[0] || '?').toUpperCase()}
+                  </Text>
+                </View>
+              )}
+            </View>
+            <View>
+              <Text style={styles.welcomeMuted}>{t('welcome')}</Text>
+              <Text style={styles.welcomeName}>
+                {user?.firstName ? `Hi, ${user.firstName}` : t('appName')}
+              </Text>
+            </View>
           </View>
-          <TouchableOpacity style={styles.iconBtn}>
-            <Ionicons name="search" size={22} color={palette.gray700} />
-          </TouchableOpacity>
+        </View>
+
+        {/* Hero question + search */}
+        <View style={styles.heroBlock}>
+          <Text style={styles.heroQuestion}>{t('heroQuestion')}</Text>
+          <SearchBar
+            value={search}
+            onChangeText={setSearch}
+            onSubmit={() =>
+              search.trim() &&
+              navigation.navigate('PlacesByCategory', {
+                categoryId: '',
+                categoryName: search.trim(),
+              })
+            }
+            placeholder={t('search')}
+            onFilter={() => navigation.getParent()?.navigate('Explore')}
+          />
         </View>
 
         {loading ? (
@@ -91,15 +131,14 @@ export default function HomeScreen({ navigation }: HomeScreenProps<'HomeMain'>) 
           </View>
         ) : (
           <>
-            {/* Categories */}
-            <SectionHeader title={t('categories')} />
+            {/* Categories — horizontal circles */}
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.row}
             >
               {categories.map((cat) => (
-                <CategoryCard
+                <CategoryCircle
                   key={cat._id}
                   category={cat}
                   onPress={() =>
@@ -112,8 +151,8 @@ export default function HomeScreen({ navigation }: HomeScreenProps<'HomeMain'>) 
               ))}
             </ScrollView>
 
-            {/* Top rated */}
-            <SectionHeader title={t('featured')} />
+            {/* Popular section */}
+            <SectionHeader title={t('popular')} onViewAll={() => navigation.getParent()?.navigate('Explore')} />
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -128,6 +167,36 @@ export default function HomeScreen({ navigation }: HomeScreenProps<'HomeMain'>) 
                 />
               ))}
             </ScrollView>
+
+            {/* New destinations — wide list of 3 */}
+            <SectionHeader title={t('newDestinations')} />
+            <View style={styles.wideList}>
+              {topRated.slice(3, 6).map((p) => (
+                <PlaceCard
+                  key={`wide-${p._id}`}
+                  place={p}
+                  variant="wide"
+                  onPress={() => navigation.navigate('PlaceDetail', { placeId: p._id })}
+                />
+              ))}
+            </View>
+
+            {/* Travel essentials tiles */}
+            <SectionHeader title={t('travelEssentials')} />
+            <View style={styles.tilesGrid}>
+              <QuickTile icon="people" label={t('culture')} color={palette.terracotta}
+                onPress={() => navigation.navigate('CulturalGuide')} />
+              <QuickTile icon="book" label={t('phrasebook')} color={palette.olive}
+                onPress={() => navigation.navigate('Phrasebook')} />
+              <QuickTile icon="shield-checkmark" label={t('safety')} color={palette.mediterraneanBlue}
+                onPress={() => navigation.navigate('SafetyTips')} />
+              <QuickTile icon="pricetag" label={t('prices')} color={palette.gold}
+                onPress={() => navigation.navigate('Prices')} />
+            </View>
+
+            {/* Currency widget */}
+            <SectionHeader title={t('exchangeRates')} />
+            <CurrencyWidget onPress={() => navigation.navigate('CurrencyConverter')} />
           </>
         )}
       </ScrollView>
@@ -135,13 +204,34 @@ export default function HomeScreen({ navigation }: HomeScreenProps<'HomeMain'>) 
   );
 }
 
-function SectionHeader({ title, action }: { title: string; action?: () => void }) {
+function QuickTile({
+  icon,
+  label,
+  color,
+  onPress,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  color: string;
+  onPress: () => void;
+}) {
+  return (
+    <TouchableOpacity style={styles.tile} onPress={onPress} activeOpacity={0.85}>
+      <View style={[styles.tileIcon, { backgroundColor: color + '22' }]}>
+        <Ionicons name={icon} size={22} color={color} />
+      </View>
+      <Text style={styles.tileLabel} numberOfLines={1}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
+function SectionHeader({ title, onViewAll }: { title: string; onViewAll?: () => void }) {
   const { t } = useTranslation();
   return (
     <View style={styles.sectionHeader}>
       <Text style={styles.sectionTitle}>{title}</Text>
-      {action && (
-        <TouchableOpacity onPress={action}>
+      {onViewAll && (
+        <TouchableOpacity onPress={onViewAll}>
           <Text style={styles.seeAll}>{t('seeAll')}</Text>
         </TouchableOpacity>
       )}
@@ -150,25 +240,54 @@ function SectionHeader({ title, action }: { title: string; action?: () => void }
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: palette.gray50 },
+  container: { flex: 1, backgroundColor: palette.white },
   content: { paddingBottom: spacing['3xl'] },
+
+  // ── Header ─────────────────────────────────────────────
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.base,
-    paddingBottom: spacing.base,
+    paddingBottom: spacing.lg,
   },
-  greeting: { fontSize: 22, fontWeight: '700', color: palette.mediterraneanBlue },
-  subtitle: { fontSize: 13, color: palette.gray500, marginTop: 2 },
-  iconBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: palette.white,
+  userBlock: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  avatarRing: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    overflow: 'hidden',
+    backgroundColor: palette.gray100,
+  },
+  avatar: { width: '100%', height: '100%' },
+  avatarFallback: {
+    backgroundColor: palette.mediterraneanBlue,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  avatarInitials: { color: palette.white, fontSize: 18, fontWeight: '700' },
+  welcomeMuted: { fontSize: 13, color: palette.gray500 },
+  welcomeName: { fontSize: 16, fontWeight: '700', color: palette.gray900 },
+  bellBtn: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: palette.gray100,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // ── Hero ───────────────────────────────────────────────
+  heroBlock: { paddingHorizontal: spacing.xl, marginBottom: spacing.lg },
+  heroQuestion: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: palette.gray900,
+    marginBottom: spacing.lg,
+  },
+
+  // ── Layout commons ─────────────────────────────────────
   loader: { paddingVertical: spacing['4xl'], alignItems: 'center' },
   errorBox: {
     margin: spacing.xl,
@@ -186,18 +305,48 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   retryText: { color: palette.white, fontWeight: '600', fontSize: 13 },
+
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
-    marginTop: spacing.lg,
-    marginBottom: spacing.sm,
+    marginTop: spacing.xl,
+    marginBottom: spacing.base,
   },
-  sectionTitle: { fontSize: 17, fontWeight: '700', color: palette.gray900 },
+  sectionTitle: { fontSize: 18, fontWeight: '700', color: palette.gray900 },
   seeAll: { fontSize: 13, fontWeight: '600', color: palette.mediterraneanBlue },
   row: {
     paddingHorizontal: spacing.xl,
-    gap: spacing.md,
+    gap: 0, // PlaceCard / CategoryCircle handle their own marginRight
   },
+
+  wideList: { paddingHorizontal: spacing.xl },
+
+  // ── Tiles ──────────────────────────────────────────────
+  tilesGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: spacing.lg,
+    gap: spacing.sm,
+  },
+  tile: {
+    width: '48%',
+    backgroundColor: palette.white,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    ...shadows.sm,
+  },
+  tileIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tileLabel: { color: palette.gray800, fontWeight: '600', fontSize: 13, flex: 1 },
 });

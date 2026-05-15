@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
-const { REGIONS, INTERESTS, BUDGET_LEVELS } = require('../config/constants');
+const { REGIONS, INTERESTS, BUDGET_LEVELS, ACCOMMODATION_TYPES } = require('../config/constants');
 
 const placeSchema = new mongoose.Schema(
   {
@@ -56,6 +56,14 @@ const placeSchema = new mongoose.Schema(
       type: String,
       enum: BUDGET_LEVELS,
       default: 'moderate',
+    },
+    // Filled only on places that are an accommodation (hotel, hostel, riad…).
+    // Left null for non-accommodation places (museums, beaches, etc.).
+    accommodationType: {
+      type: String,
+      enum: [...ACCOMMODATION_TYPES, null],
+      default: null,
+      index: true,
     },
     priceRange: {
       min: { type: Number, default: null },

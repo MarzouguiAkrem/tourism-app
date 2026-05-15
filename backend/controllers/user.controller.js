@@ -2,10 +2,35 @@ const User = require('../models/User');
 const ApiError = require('../utils/ApiError');
 const ApiResponse = require('../utils/ApiResponse');
 const catchAsync = require('../utils/catchAsync');
+const cloudinary = require('../services/cloudinaryService');
+
+// Best-effort cleanup of a previously stored avatar (only if it was on Cloudinary)
+const removePreviousAvatar = async (avatarUrl) => {
+  if (!avatarUrl || !avatarUrl.includes('cloudinary.com')) return;
+  const publicId = cloudinary.publicIdFromUrl(avatarUrl);
+  if (publicId) await cloudinary.destroy(publicId);
+};
 
 // ──────────────────────────────────────────────
 //  ADMIN ENDPOINTS
 // ──────────────────────────────────────────────
+
+// @desc    Create user (admin) — bypasses self-registration so admins can
+//          provision other admins, guides, etc. with a chosen role/active state.
+// @route   POST /api/v1/users
+// @access  Private/Admin
+const adminCreateUser = catchAsync(async (req, res) => {
+  const { email } = req.body;
+  const existing = await User.findOne({ email });
+  if (existing) {
+    throw ApiError.conflict('A user with this email already exists');
+  }
+  const user = await User.create(req.body);
+  const resp = user.toObject();
+  delete resp.password;
+  delete resp.refreshToken;
+  ApiResponse.created(res, resp, 'User created successfully');
+});
 
 // @desc    Get all users (admin)
 // @route   GET /api/v1/users
@@ -82,9 +107,25 @@ const deleteUser = catchAsync(async (req, res) => {
 
   user.isActive = false;
   user.refreshToken = null;
+  user.pushTokens = [];
   await user.save({ validateBeforeSave: false });
 
   ApiResponse.success(res, null, 'User deactivated successfully');
+});
+
+// @desc    Reactivate a soft-deleted user (admin)
+// @route   PATCH /api/v1/users/:id/activate
+// @access  Private/Admin
+const reactivateUser = catchAsync(async (req, res) => {
+  const user = await User.findByIdAndUpdate(
+    req.params.id,
+    { isActive: true },
+    { returnDocument: 'after', runValidators: true }
+  );
+  if (!user) {
+    throw ApiError.notFound('User not found');
+  }
+  ApiResponse.success(res, user, 'User reactivated successfully');
 });
 
 // ──────────────────────────────────────────────
@@ -161,8 +202,17 @@ const updateAvatar = catchAsync(async (req, res) => {
   if (!req.file) {
     throw ApiError.badRequest('Please upload an image');
   }
+  if (!cloudinary.isConfigured()) {
+    throw ApiError.internal('Cloudinary is not configured on the server');
+  }
 
-  const avatarUrl = `/uploads/${req.file.filename}`;
+  const previousAvatar = req.user.avatar;
+
+  const { url: avatarUrl } = await cloudinary.uploadBuffer(req.file.buffer, {
+    folder: `tunisia-tourism/avatars`,
+    publicId: `user_${req.user._id}`,
+    tags: ['avatar'],
+  });
 
   const user = await User.findByIdAndUpdate(
     req.user._id,
@@ -170,17 +220,68 @@ const updateAvatar = catchAsync(async (req, res) => {
     { returnDocument: 'after' }
   );
 
+  if (previousAvatar && previousAvatar !== avatarUrl) {
+    await removePreviousAvatar(previousAvatar);
+  }
+
   ApiResponse.success(res, user, 'Avatar updated successfully');
 });
 
+// @desc    Delete own account (self soft-delete)
+// @route   DELETE /api/v1/users/profile/me
+// @access  Private
+const deleteOwnAccount = catchAsync(async (req, res) => {
+  const user = await User.findById(req.user._id).select('+password');
+  if (!user) {
+    throw ApiError.notFound('User not found');
+  }
+
+  // Block the last active admin from removing themselves to avoid lockout
+  if (user.role === 'admin') {
+    const remainingAdmins = await User.countDocuments({
+      role: 'admin',
+      isActive: true,
+      _id: { $ne: user._id },
+    });
+    if (remainingAdmins === 0) {
+      throw ApiError.badRequest(
+        'You are the last active admin — promote another user before deleting your account'
+      );
+    }
+  }
+
+  // Optional password confirmation: if provided, must match
+  if (req.body && req.body.password) {
+    const ok = await user.comparePassword(req.body.password);
+    if (!ok) {
+      throw ApiError.unauthorized('Password is incorrect');
+    }
+  }
+
+  if (user.avatar) {
+    await removePreviousAvatar(user.avatar);
+    user.avatar = null;
+  }
+
+  user.isActive = false;
+  user.refreshToken = null;
+  user.pushTokens = [];
+  await user.save({ validateBeforeSave: false });
+
+  ApiResponse.success(res, null, 'Account deleted successfully');
+});
+
 module.exports = {
+  adminCreateUser,
   getUsers,
   getUser,
   updateUser,
   deleteUser,
+  reactivateUser,
   getProfile,
   updateProfile,
   updatePreferences,
   changePassword,
   updateAvatar,
+  deleteOwnAccount,
 };

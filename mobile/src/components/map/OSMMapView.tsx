@@ -19,11 +19,19 @@ export interface OSMPolyline {
   weight?: number;
 }
 
+export interface UserLocation {
+  latitude: number;
+  longitude: number;
+  /** Accuracy radius in meters — drawn as a faint circle around the marker */
+  accuracy?: number;
+}
+
 interface Props {
   markers: OSMMarker[];
   polyline?: OSMPolyline;
   /** Initial center if there are no markers */
   initialRegion?: { latitude: number; longitude: number; zoom?: number };
+  userLocation?: UserLocation | null;
   onMarkerPress?: (id: string) => void;
   style?: any;
 }
@@ -33,11 +41,13 @@ const TUNISIA_CENTER = { latitude: 34.0, longitude: 9.0, zoom: 6 };
 const buildHtml = (
   markers: OSMMarker[],
   region: { latitude: number; longitude: number; zoom: number },
-  polyline?: OSMPolyline
+  polyline?: OSMPolyline,
+  userLocation?: UserLocation | null
 ) => {
   // Escape the JSON safely for embedding in <script>
   const markersJson = JSON.stringify(markers).replace(/</g, '\\u003c');
   const polylineJson = JSON.stringify(polyline || null).replace(/</g, '\\u003c');
+  const userLocationJson = JSON.stringify(userLocation || null).replace(/</g, '\\u003c');
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -55,6 +65,12 @@ const buildHtml = (
       display: flex; align-items: center; justify-content: center;
       box-shadow: 0 1px 4px rgba(0,0,0,0.35);
       border: 2px solid #fff;
+    }
+    .user-dot {
+      width: 18px; height: 18px; border-radius: 9px;
+      background: #2563eb;
+      border: 3px solid #fff;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.35), 0 1px 4px rgba(0,0,0,0.35);
     }
   </style>
 </head>
@@ -79,6 +95,7 @@ const buildHtml = (
       };
 
       var polylineData = ${polylineJson};
+      var userLoc = ${userLocationJson};
       var bounds = [];
 
       markers.forEach(function (m) {
@@ -112,11 +129,51 @@ const buildHtml = (
         }).addTo(map);
       }
 
+      if (userLoc) {
+        var userIcon = L.divIcon({
+          className: 'user-marker-wrap',
+          html: '<div class="user-dot"></div>',
+          iconSize: [18, 18],
+          iconAnchor: [9, 9]
+        });
+        L.marker([userLoc.latitude, userLoc.longitude], { icon: userIcon, zIndexOffset: 1000 })
+          .addTo(map)
+          .bindPopup('<b>You are here</b>');
+        if (userLoc.accuracy && userLoc.accuracy > 0) {
+          L.circle([userLoc.latitude, userLoc.longitude], {
+            radius: userLoc.accuracy,
+            color: '#2563eb',
+            fillColor: '#3b82f6',
+            fillOpacity: 0.12,
+            weight: 1
+          }).addTo(map);
+        }
+        bounds.push([userLoc.latitude, userLoc.longitude]);
+      }
+
       if (bounds.length > 1) {
         map.fitBounds(bounds, { padding: [40, 40] });
       } else if (bounds.length === 1) {
-        map.setView(bounds[0], 12);
+        map.setView(bounds[0], userLoc ? 14 : 12);
       }
+
+      // Listen for "centerOn" messages coming from React Native side
+      document.addEventListener('message', function (e) {
+        try {
+          var data = JSON.parse(e.data);
+          if (data && data.type === 'centerOn' && typeof data.lat === 'number') {
+            map.setView([data.lat, data.lng], data.zoom || 14, { animate: true });
+          }
+        } catch (e) {}
+      });
+      window.addEventListener('message', function (e) {
+        try {
+          var data = JSON.parse(e.data);
+          if (data && data.type === 'centerOn' && typeof data.lat === 'number') {
+            map.setView([data.lat, data.lng], data.zoom || 14, { animate: true });
+          }
+        } catch (e) {}
+      });
 
       send({ type: 'ready' });
     })();
@@ -125,13 +182,14 @@ const buildHtml = (
 </html>`;
 };
 
-export default function OSMMapView({
-  markers,
-  polyline,
-  initialRegion,
-  onMarkerPress,
-  style,
-}: Props) {
+export interface OSMMapHandle {
+  centerOn: (lat: number, lng: number, zoom?: number) => void;
+}
+
+const OSMMapView = React.forwardRef<OSMMapHandle, Props>(function OSMMapView(
+  { markers, polyline, initialRegion, userLocation, onMarkerPress, style },
+  forwardedRef
+) {
   const ref = useRef<WebView>(null);
   const region = {
     latitude: initialRegion?.latitude ?? TUNISIA_CENTER.latitude,
@@ -139,9 +197,27 @@ export default function OSMMapView({
     zoom: initialRegion?.zoom ?? TUNISIA_CENTER.zoom,
   };
 
+  React.useImperativeHandle(forwardedRef, () => ({
+    centerOn: (lat: number, lng: number, zoom = 14) => {
+      const payload = JSON.stringify({ type: 'centerOn', lat, lng, zoom });
+      ref.current?.injectJavaScript(
+        `window.postMessage(${JSON.stringify(payload)}, '*'); true;`
+      );
+    },
+  }));
+
   const html = useMemo(
-    () => buildHtml(markers, region, polyline),
-    [markers, polyline, region.latitude, region.longitude, region.zoom]
+    () => buildHtml(markers, region, polyline, userLocation),
+    [
+      markers,
+      polyline,
+      userLocation?.latitude,
+      userLocation?.longitude,
+      userLocation?.accuracy,
+      region.latitude,
+      region.longitude,
+      region.zoom,
+    ]
   );
 
   const onMessage = (e: WebViewMessageEvent) => {
@@ -172,7 +248,9 @@ export default function OSMMapView({
       />
     </View>
   );
-}
+});
+
+export default OSMMapView;
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#e8f0f4' },

@@ -18,6 +18,9 @@ export const ENDPOINTS = {
     PREFERENCES: '/users/profile/me/preferences',
     PASSWORD: '/users/profile/me/password',
     AVATAR: '/users/profile/me/avatar',
+    DELETE_ME: '/users/profile/me',
+    BY_ID: (id: string) => `/users/${id}`,
+    ACTIVATE: (id: string) => `/users/${id}/activate`,
   },
 
   // Places
@@ -82,5 +85,19 @@ export const ENDPOINTS = {
     BUNDLE: '/sync/bundle',
     VERSION: '/sync/bundle/version',
     DELTA: '/sync/delta',
+  },
+
+  // Feedback (app rating + suggestions)
+  FEEDBACK: {
+    BASE: '/feedback',
+    MINE: '/feedback/me',
+    STATS: '/feedback/stats',
+    BY_ID: (id: string) => `/feedback/${id}`,
+  },
+
+  // Safety admin CRUD reuses the same /safety/alerts paths
+  SAFETY_ALERTS: {
+    BASE: '/safety/alerts',
+    BY_ID: (id: string) => `/safety/alerts/${id}`,
   },
 };

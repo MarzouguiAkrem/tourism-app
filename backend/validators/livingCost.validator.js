@@ -17,7 +17,7 @@ const localizedNote = Joi.object({
 const createLivingCostSchema = Joi.object({
   item: localizedShort.required(),
   category: Joi.string()
-    .valid('food', 'transport', 'accommodation', 'leisure', 'communication', 'other')
+    .valid('food', 'transport', 'accommodation', 'leisure', 'communication', 'shopping', 'other')
     .required(),
   priceTND: Joi.number().min(0).required(),
   priceRange: Joi.object({

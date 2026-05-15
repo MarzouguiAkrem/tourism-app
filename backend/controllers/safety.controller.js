@@ -4,16 +4,6 @@ const ApiError = require('../utils/ApiError');
 const ApiResponse = require('../utils/ApiResponse');
 const catchAsync = require('../utils/catchAsync');
 
-// Lazy push notifications — wired in Phase 9
-const tryPushAlert = async (alert) => {
-  try {
-    const { sendAlertToNearbyUsers } = require('../services/pushService');
-    await sendAlertToNearbyUsers(alert);
-  } catch {
-    // pushService may not be configured — non-fatal
-  }
-};
-
 // ────────────────────────────────────────────────────────────
 // Safety alerts
 // ────────────────────────────────────────────────────────────
@@ -75,7 +65,6 @@ const getAlert = catchAsync(async (req, res) => {
 
 const createAlert = catchAsync(async (req, res) => {
   const alert = await SafetyAlert.create({ ...req.body, createdBy: req.user._id });
-  await tryPushAlert(alert);
   ApiResponse.created(res, alert, 'Safety alert created');
 });
 

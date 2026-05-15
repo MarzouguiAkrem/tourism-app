@@ -7,6 +7,9 @@ export const placesService = {
   async list(filters: PlaceFilters = {}): Promise<PaginatedEnvelope<Place>> {
     const params: Record<string, unknown> = { ...filters };
     if (Array.isArray(filters.tags)) params.tags = filters.tags.join(',');
+    if (Array.isArray(filters.accommodationType)) {
+      params.accommodationType = filters.accommodationType.join(',');
+    }
     const { data } = await api.get<PaginatedEnvelope<Place>>(
       ENDPOINTS.PLACES.BASE,
       { params }

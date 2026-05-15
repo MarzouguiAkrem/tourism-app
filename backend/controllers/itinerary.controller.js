@@ -99,6 +99,7 @@ const generate = catchAsync(async (req, res) => {
     budgetLevel,
     currency,
     startDate,
+    accommodationType,
     persist,
   } = req.body;
 
@@ -110,6 +111,7 @@ const generate = catchAsync(async (req, res) => {
     startCoords,
     budget,
     budgetLevel,
+    accommodationType,
   });
 
   if (!result.days.length) {
@@ -138,6 +140,7 @@ const generate = catchAsync(async (req, res) => {
       startCoords,
       budget,
       budgetLevel,
+      accommodationType,
       weights: result.weights,
     },
   };

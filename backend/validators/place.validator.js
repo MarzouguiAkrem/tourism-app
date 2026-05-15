@@ -1,5 +1,5 @@
 const Joi = require('joi');
-const { REGIONS, INTERESTS, BUDGET_LEVELS } = require('../config/constants');
+const { REGIONS, INTERESTS, BUDGET_LEVELS, ACCOMMODATION_TYPES } = require('../config/constants');
 const { objectId } = require('./common.validator');
 
 const localizedRequired = Joi.object({
@@ -45,6 +45,7 @@ const createPlaceSchema = Joi.object({
   coverImage: Joi.string().allow('', null),
   images: Joi.array().items(Joi.string()),
   priceLevel: Joi.string().valid(...BUDGET_LEVELS),
+  accommodationType: Joi.string().valid(...ACCOMMODATION_TYPES).allow(null),
   priceRange: Joi.object({
     min: Joi.number().min(0).allow(null),
     max: Joi.number().min(0).allow(null),

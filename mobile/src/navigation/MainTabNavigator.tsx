@@ -1,7 +1,10 @@
 import React from 'react';
+import { Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { MainTabParamList } from '../types/navigation';
 import { palette } from '../theme';
 
@@ -26,6 +29,11 @@ const getTabIcon = (routeName: string, focused: boolean): keyof typeof Ionicons.
 
 export default function MainTabNavigator() {
   const { t } = useTranslation();
+  const insets = useSafeAreaInsets();
+
+  // Floor the bottom inset to a sensible minimum so the tab bar never sits
+  // right on the edge (Android edge-to-edge devices report 0 for `bottom`).
+  const bottomPad = Math.max(insets.bottom, Platform.OS === 'android' ? 12 : 8);
 
   return (
     <Tab.Navigator
@@ -43,12 +51,27 @@ export default function MainTabNavigator() {
         tabBarStyle: {
           backgroundColor: palette.white,
           borderTopColor: palette.gray200,
-          paddingBottom: 4,
-          height: 60,
+          borderTopWidth: 1,
+          paddingBottom: bottomPad,
+          paddingTop: 8,
+          height: 56 + bottomPad,
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.05,
+          shadowRadius: 4,
+        },
+        tabBarItemStyle: {
+          paddingVertical: 4,
         },
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '500' as const,
+          marginTop: 2,
+        },
+        // Reserve room at the bottom of each screen for the absolute tab bar
+        sceneContainerStyle: {
+          backgroundColor: palette.gray50,
         },
       })}
     >

@@ -44,9 +44,9 @@ app.use('/api/v1/cultural', require('./routes/cultural.routes'));
 app.use('/api/v1/safety', require('./routes/safety.routes'));
 app.use('/api/v1/favorites', require('./routes/favorite.routes'));
 app.use('/api/v1/living-costs', require('./routes/livingCost.routes'));
-app.use('/api/v1/notifications', require('./routes/notification.routes'));
 app.use('/api/v1/admin', require('./routes/admin.routes'));
 app.use('/api/v1/sync', require('./routes/sync.routes'));
+app.use('/api/v1/feedback', require('./routes/feedback.routes'));
 
 // Health check
 app.get('/api/v1/health', (req, res) => {

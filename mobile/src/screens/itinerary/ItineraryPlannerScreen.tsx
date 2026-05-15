@@ -18,7 +18,7 @@ import * as Location from 'expo-location';
 import { palette, spacing, borderRadius, shadows, typography } from '../../theme';
 import { itinerariesService } from '../../services/itineraries.service';
 import { GenerateItineraryPayload } from '../../types/itinerary';
-import { PriceLevel } from '../../types/place';
+import { AccommodationType, PriceLevel } from '../../types/place';
 
 const INTERESTS = [
   'history',
@@ -50,6 +50,17 @@ const REGIONS = [
 
 const BUDGET_LEVELS: PriceLevel[] = ['budget', 'moderate', 'luxury'];
 
+const ACCOMMODATION_TYPES: { value: AccommodationType; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { value: 'hotel', icon: 'business' },
+  { value: 'hostel', icon: 'bed' },
+  { value: 'riad', icon: 'home' },
+  { value: 'guesthouse', icon: 'home-outline' },
+  { value: 'apartment', icon: 'briefcase' },
+  { value: 'resort', icon: 'umbrella' },
+  { value: 'camping', icon: 'leaf' },
+  { value: 'ecolodge', icon: 'flower' },
+];
+
 const TOTAL_STEPS = 4;
 
 export default function ItineraryPlannerScreen() {
@@ -62,6 +73,7 @@ export default function ItineraryPlannerScreen() {
   const [durationDays, setDurationDays] = useState(5);
   const [budgetLevel, setBudgetLevel] = useState<PriceLevel>('moderate');
   const [budget, setBudget] = useState<string>(''); // TND
+  const [accommodationType, setAccommodationType] = useState<AccommodationType | null>(null);
   const [interests, setInterests] = useState<string[]>([]);
   const [startRegion, setStartRegion] = useState<string | null>(null);
   const [startCoords, setStartCoords] = useState<[number, number] | null>(null);
@@ -110,6 +122,7 @@ export default function ItineraryPlannerScreen() {
       if (budget) payload.budget = Number(budget);
       if (startRegion) payload.startRegion = startRegion;
       if (startCoords) payload.startCoords = startCoords;
+      if (accommodationType) payload.accommodationType = accommodationType;
 
       const { itinerary, warning } = await itinerariesService.generate(payload);
       if (warning) {
@@ -158,6 +171,8 @@ export default function ItineraryPlannerScreen() {
             setBudgetLevel={setBudgetLevel}
             budget={budget}
             setBudget={setBudget}
+            accommodationType={accommodationType}
+            setAccommodationType={setAccommodationType}
           />
         )}
         {step === 2 && (
@@ -180,6 +195,7 @@ export default function ItineraryPlannerScreen() {
             interests={interests}
             startRegion={startRegion}
             startCoords={startCoords}
+            accommodationType={accommodationType}
           />
         )}
       </ScrollView>
@@ -233,6 +249,8 @@ const Step1 = ({
   setBudgetLevel,
   budget,
   setBudget,
+  accommodationType,
+  setAccommodationType,
 }: any) => {
   const { t } = useTranslation();
   return (
@@ -284,6 +302,40 @@ const Step1 = ({
           style={styles.input}
         />
         <Text style={styles.inputSuffix}>TND</Text>
+      </View>
+
+      <Text style={[styles.sectionTitle, { marginTop: spacing.xl }]}>
+        {t('accommodationType')}
+      </Text>
+      <Text style={styles.sectionHelper}>{t('accommodationTypeHelper')}</Text>
+      <View style={styles.chipsGrid}>
+        <TouchableOpacity
+          style={[styles.chip, !accommodationType && styles.chipActive]}
+          onPress={() => setAccommodationType(null)}
+        >
+          <Text style={[styles.chipText, !accommodationType && styles.chipTextActive]}>
+            {t('noPreference')}
+          </Text>
+        </TouchableOpacity>
+        {ACCOMMODATION_TYPES.map((at) => {
+          const active = accommodationType === at.value;
+          return (
+            <TouchableOpacity
+              key={at.value}
+              style={[styles.accChip, active && styles.chipActive]}
+              onPress={() => setAccommodationType(at.value)}
+            >
+              <Ionicons
+                name={at.icon}
+                size={14}
+                color={active ? palette.white : palette.gray600}
+              />
+              <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                {t(`accommodationTypes.${at.value}`)}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
     </View>
   );
@@ -407,6 +459,7 @@ const Step4 = ({
   interests,
   startRegion,
   startCoords,
+  accommodationType,
 }: any) => {
   const { t } = useTranslation();
   return (
@@ -432,6 +485,9 @@ const Step4 = ({
         </SummaryRow>
         <SummaryRow icon="locate-outline" label={t('yourLocation')}>
           {startCoords ? `${startCoords[1].toFixed(4)}, ${startCoords[0].toFixed(4)}` : '—'}
+        </SummaryRow>
+        <SummaryRow icon="bed-outline" label={t('accommodationType')}>
+          {accommodationType ? t(`accommodationTypes.${accommodationType}`) : t('noPreference')}
         </SummaryRow>
       </View>
     </View>
@@ -509,6 +565,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.sm,
     flexWrap: 'wrap',
+  },
+  accChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    backgroundColor: palette.white,
+    borderWidth: 1,
+    borderColor: palette.gray200,
   },
   chip: {
     paddingHorizontal: spacing.md,

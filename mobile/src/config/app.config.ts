@@ -1,7 +1,7 @@
 import { Platform, NativeModules } from 'react-native';
 
 // Fallback IP if we cannot auto-detect from the Metro bundler URL
-const FALLBACK_LOCAL_IP = '192.168.1.125';
+const FALLBACK_LOCAL_IP = '192.168.100.22';
 const API_PORT = 5000;
 
 // Pull the dev machine host from Metro's scriptURL (works on emulators & devices

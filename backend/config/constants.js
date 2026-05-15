@@ -34,6 +34,17 @@ module.exports = {
 
   BUDGET_LEVELS: ['budget', 'moderate', 'luxury'],
 
+  ACCOMMODATION_TYPES: [
+    'hotel',
+    'hostel',
+    'riad',
+    'guesthouse',
+    'apartment',
+    'resort',
+    'camping',
+    'ecolodge',
+  ],
+
   LANGUAGES: ['fr', 'en', 'ar'],
 
   SEVERITY_LEVELS: ['info', 'warning', 'danger'],

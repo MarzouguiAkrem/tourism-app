@@ -1,20 +1,10 @@
 const multer = require('multer');
-const path = require('path');
 const ApiError = require('../utils/ApiError');
 
-// Storage configuration - disk storage for local development
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '..', 'uploads'));
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    const ext = path.extname(file.originalname);
-    cb(null, `${file.fieldname}-${uniqueSuffix}${ext}`);
-  },
-});
+// Use in-memory storage so we can pipe the buffer to Cloudinary without
+// touching disk. (Local-disk uploads/ folder is no longer used.)
+const storage = multer.memoryStorage();
 
-// File filter - only images
 const fileFilter = (req, file, cb) => {
   const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
   if (allowedTypes.includes(file.mimetype)) {

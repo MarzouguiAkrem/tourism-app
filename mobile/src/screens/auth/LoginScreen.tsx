@@ -18,6 +18,7 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { login, clearError } from '../../store/slices/authSlice';
 import { palette } from '../../theme';
 import { spacing, borderRadius } from '../../theme/spacing';
+import AppLogo from '../../components/common/AppLogo';
 
 export default function LoginScreen({ navigation }: AuthScreenProps<'Login'>) {
   const { t } = useTranslation();
@@ -36,21 +37,21 @@ export default function LoginScreen({ navigation }: AuthScreenProps<'Login'>) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 24}
       >
         <ScrollView
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          bounces={false}
         >
           {/* Logo / Header */}
           <View style={styles.header}>
-            <View style={styles.logoContainer}>
-              <Ionicons name="airplane" size={48} color={palette.white} />
-            </View>
+            <AppLogo size={120} style={{ marginBottom: spacing.base }} />
             <Text style={styles.title}>Tunisia Travel</Text>
             <Text style={styles.subtitle}>{t('welcome')}</Text>
           </View>
@@ -160,7 +161,8 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     paddingHorizontal: spacing['2xl'],
-    paddingVertical: spacing['3xl'],
+    paddingTop: spacing['2xl'],
+    paddingBottom: spacing['3xl'],
   },
   header: {
     alignItems: 'center',

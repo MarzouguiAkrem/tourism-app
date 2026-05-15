@@ -76,27 +76,6 @@ const userSchema = new mongoose.Schema(
       select: false,
       default: null,
     },
-    pushTokens: {
-      type: [
-        {
-          token: { type: String, required: true },
-          platform: { type: String, enum: ['ios', 'android', 'web'], default: 'android' },
-          createdAt: { type: Date, default: Date.now },
-          _id: false,
-        },
-      ],
-      default: [],
-    },
-    notificationPreferences: {
-      safetyAlerts: { type: Boolean, default: true },
-      itineraryReminders: { type: Boolean, default: true },
-      promotions: { type: Boolean, default: false },
-    },
-    lastKnownLocation: {
-      type: { type: String, enum: ['Point'], default: null },
-      coordinates: { type: [Number], default: undefined },
-      updatedAt: { type: Date, default: null },
-    },
     passwordResetToken: {
       type: String,
       default: null,

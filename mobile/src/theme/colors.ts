@@ -117,4 +117,7 @@ export const darkTheme = {
   statusBar: 'light-content' as const,
 };
 
-export type Theme = typeof lightTheme;
+// Use a relaxed status-bar typing so darkTheme remains assignable to Theme.
+export type Theme = Omit<typeof lightTheme, 'statusBar'> & {
+  statusBar: 'dark-content' | 'light-content';
+};

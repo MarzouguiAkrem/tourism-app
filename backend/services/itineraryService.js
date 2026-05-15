@@ -165,12 +165,14 @@ const generate = async (params) => {
     budget = null,
     budgetLevel = 'moderate',
     regions = null,
+    accommodationType = null,
   } = params;
 
   const weights = await getWeights();
 
-  // 1. Filter candidates
-  const filter = { status: 'published' };
+  // 1. Filter candidates — only "visit" places (no accommodation) so the
+  //    nightly stay doesn't compete with sightseeing in the scoring pool.
+  const filter = { status: 'published', accommodationType: null };
   if (regions?.length) filter.region = { $in: regions };
   else if (startRegion) filter.region = startRegion;
   if (interests.length) filter.tags = { $in: interests };
@@ -182,6 +184,28 @@ const generate = async (params) => {
     const broad = { ...filter };
     delete broad.tags;
     candidates = await Place.find(broad).lean();
+  }
+
+  // Pick a recommended accommodation if requested. We choose the highest-rated
+  // one in the start region (or anywhere), close to startCoords if provided.
+  let accommodation = null;
+  if (accommodationType) {
+    const accFilter = { status: 'published', accommodationType };
+    if (startRegion) accFilter.region = startRegion;
+    const accommodations = await Place.find(accFilter).lean();
+    if (accommodations.length) {
+      const ranked = accommodations
+        .map((a) => ({
+          a,
+          score:
+            (a.rating?.average || 0) / 5 +
+            (startCoords && a.location?.coordinates
+              ? Math.max(0, 1 - haversineKm(startCoords, a.location.coordinates) / 500)
+              : 0),
+        }))
+        .sort((x, y) => y.score - x.score);
+      accommodation = ranked[0].a;
+    }
   }
 
   if (candidates.length === 0) {
@@ -221,7 +245,12 @@ const generate = async (params) => {
     buckets[i] = b.slice(0, STOPS_PER_DAY);
   });
 
-  // 4. Order each day by nearest-neighbor from start
+  // 4. Order each day by nearest-neighbor from start. When the traveller asked
+  //    for a specific accommodation type, the chosen lodging is appended as
+  //    the last stop of every day (an "end of day" night stop).
+  const accommodationNightlyCost =
+    accommodation?.priceRange?.min ??
+    (PRICE_LEVEL_COST[accommodation?.priceLevel] || 0) * 2;
   const days = buckets.map((bucketPlaces, idx) => {
     const ordered = orderByNearestNeighbor(bucketPlaces, idx === 0 ? startCoords : null);
     const stops = ordered.map((p, i) => ({
@@ -230,6 +259,15 @@ const generate = async (params) => {
       durationMin: 90,
       estimatedCost: estimateStopCost(p),
     }));
+    if (accommodation) {
+      stops.push({
+        place: accommodation._id,
+        order: stops.length + 1,
+        durationMin: 0,
+        estimatedCost: accommodationNightlyCost,
+        note: 'Nightly stay',
+      });
+    }
     const dayCost =
       stops.reduce((s, x) => s + x.estimatedCost, 0) +
       (MEALS_COST_PER_DAY[budgetLevel] || MEALS_COST_PER_DAY.moderate) +
@@ -270,6 +308,9 @@ const generate = async (params) => {
   pool.forEach((p) => {
     populatedPlaces[p._id.toString()] = p;
   });
+  if (accommodation) {
+    populatedPlaces[accommodation._id.toString()] = accommodation;
+  }
 
   return {
     days,

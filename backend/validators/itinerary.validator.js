@@ -1,5 +1,11 @@
 const Joi = require('joi');
-const { REGIONS, INTERESTS, BUDGET_LEVELS, ITINERARY_STATUS } = require('../config/constants');
+const {
+  REGIONS,
+  INTERESTS,
+  BUDGET_LEVELS,
+  ITINERARY_STATUS,
+  ACCOMMODATION_TYPES,
+} = require('../config/constants');
 const { objectId } = require('./common.validator');
 
 const stopSchema = Joi.object({
@@ -62,6 +68,7 @@ const generateSchema = Joi.object({
   budgetLevel: Joi.string().valid(...BUDGET_LEVELS).default('moderate'),
   currency: Joi.string().length(3).uppercase().default('TND'),
   startDate: Joi.date(),
+  accommodationType: Joi.string().valid(...ACCOMMODATION_TYPES),
   persist: Joi.boolean().default(true),
 });
 

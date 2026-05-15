@@ -18,6 +18,7 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { register, clearError } from '../../store/slices/authSlice';
 import { palette } from '../../theme';
 import { spacing, borderRadius } from '../../theme/spacing';
+import AppLogo from '../../components/common/AppLogo';
 
 export default function RegisterScreen({ navigation }: AuthScreenProps<'Register'>) {
   const { t } = useTranslation();
@@ -64,15 +65,17 @@ export default function RegisterScreen({ navigation }: AuthScreenProps<'Register
   const displayError = localError || error;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <KeyboardAvoidingView
         style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 24}
       >
         <ScrollView
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
+          bounces={false}
         >
           {/* Back Button */}
           <TouchableOpacity
@@ -81,6 +84,11 @@ export default function RegisterScreen({ navigation }: AuthScreenProps<'Register
           >
             <Ionicons name="arrow-back" size={24} color={palette.gray700} />
           </TouchableOpacity>
+
+          {/* Logo */}
+          <View style={{ alignItems: 'center', marginBottom: spacing.base }}>
+            <AppLogo size={80} />
+          </View>
 
           {/* Header */}
           <Text style={styles.title}>{t('register')}</Text>

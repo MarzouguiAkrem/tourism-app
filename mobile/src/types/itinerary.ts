@@ -1,4 +1,4 @@
-import { GeoPoint, Place, PriceLevel } from './place';
+import { AccommodationType, GeoPoint, Place, PriceLevel } from './place';
 
 export type ItineraryStatus = 'draft' | 'active' | 'completed';
 
@@ -58,6 +58,7 @@ export interface GenerateItineraryPayload {
   budgetLevel?: PriceLevel;
   currency?: string;
   startDate?: string;
+  accommodationType?: AccommodationType;
   persist?: boolean;
 }
 

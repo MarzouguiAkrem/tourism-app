@@ -1,31 +1,41 @@
-export interface CulturalInfo {
+import { Localized } from './place';
+
+export type CulturalType = 'custom' | 'etiquette' | 'lexicon' | 'tradition' | 'cuisine';
+
+export interface CulturalContent {
   _id: string;
-  type: 'custom' | 'etiquette' | 'lexicon' | 'tradition' | 'cuisine';
-  title: string;
-  titleAr?: string;
-  content: string;
-  contentAr?: string;
-  region?: string;
-  language: string;
+  type: CulturalType;
+  title: Localized;
+  slug: string;
+  summary?: Localized;
+  content?: Localized;
+  image: string | null;
+  images: string[];
+  region?: string | null;
   tags: string[];
-  sortOrder: number;
+  order: number;
+  isActive: boolean;
   createdAt: string;
+  updatedAt: string;
 }
 
-export interface SafetyAlert {
+export type LexiconCategory =
+  | 'greeting'
+  | 'food'
+  | 'directions'
+  | 'shopping'
+  | 'emergency'
+  | 'numbers'
+  | 'time'
+  | 'general';
+
+export interface LexiconEntry {
   _id: string;
-  title: string;
-  description: string;
-  severity: 'info' | 'warning' | 'danger';
-  region?: string;
-  location?: {
-    type: 'Point';
-    coordinates: [number, number];
-  };
-  radius?: number;
-  startDate: string;
-  endDate?: string;
+  word: Localized;
+  pronunciation: string;
+  audio: string | null;
+  category: LexiconCategory;
+  example?: Localized;
+  order: number;
   isActive: boolean;
-  source?: string;
-  createdAt: string;
 }

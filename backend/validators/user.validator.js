@@ -32,6 +32,22 @@ const updateUserAdminSchema = Joi.object({
   role: Joi.string().valid('tourist', 'admin'),
   isActive: Joi.boolean(),
   phone: Joi.string().trim().allow('', null),
+  nationality: Joi.string().trim().allow('', null),
+});
+
+const deleteOwnAccountSchema = Joi.object({
+  password: Joi.string().allow('', null),
+});
+
+const createUserAdminSchema = Joi.object({
+  firstName: Joi.string().trim().min(2).max(50).required(),
+  lastName: Joi.string().trim().min(2).max(50).required(),
+  email: Joi.string().email().lowercase().trim().required(),
+  password: Joi.string().min(8).max(128).required(),
+  role: Joi.string().valid('tourist', 'admin').default('tourist'),
+  isActive: Joi.boolean().default(true),
+  phone: Joi.string().trim().allow('', null),
+  nationality: Joi.string().trim().allow('', null),
 });
 
 module.exports = {
@@ -39,4 +55,6 @@ module.exports = {
   updatePreferencesSchema,
   changePasswordSchema,
   updateUserAdminSchema,
+  createUserAdminSchema,
+  deleteOwnAccountSchema,
 };

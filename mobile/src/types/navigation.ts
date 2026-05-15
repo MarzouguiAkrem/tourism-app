@@ -16,9 +16,11 @@ export type HomeStackParamList = {
   PlacesByCategory: { categoryId: string; categoryName: string };
   CurrencyConverter: undefined;
   CulturalGuide: undefined;
-  Customs: undefined;
   SafetyTips: undefined;
+  SOS: undefined;
   Phrasebook: undefined;
+  Prices: undefined;
+  Heritage: undefined;
 };
 
 // Explore Stack
@@ -45,13 +47,18 @@ export type ProfileStackParamList = {
   ProfileMain: undefined;
   EditProfile: undefined;
   Settings: undefined;
+  Feedback: undefined;
 };
 
 // Admin Stack
 export type AdminStackParamList = {
   AdminDashboard: undefined;
-  UserManagement: undefined;
-  ContentManagement: undefined;
+  RecommendationConfig: undefined;
+  AdminUsers: undefined;
+  AdminUserForm: { userId?: string };
+  AdminAlerts: undefined;
+  AdminAlertForm: { alertId?: string };
+  AdminFeedbackList: undefined;
 };
 
 // Main Tab Navigator

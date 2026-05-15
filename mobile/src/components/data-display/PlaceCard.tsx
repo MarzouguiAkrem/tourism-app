@@ -5,6 +5,7 @@ import {
   StyleSheet,
   Image,
   TouchableOpacity,
+  Dimensions,
   ViewStyle,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,63 +15,76 @@ import { useLocalized } from '../../hooks/useLocalized';
 import { resolveImageUrl } from '../../utils/imageUrl';
 import FavoriteButton from './FavoriteButton';
 
-const PRICE_LABEL: Record<string, string> = {
-  budget: '$',
-  moderate: '$$',
-  luxury: '$$$',
-};
+const SCREEN_W = Dimensions.get('window').width;
 
 interface Props {
   place: Place;
   onPress?: () => void;
-  variant?: 'default' | 'compact';
+  /** "compact" → 70% width horizontal card (default for carousels), "wide" → full-width row */
+  variant?: 'compact' | 'wide';
   style?: ViewStyle;
 }
 
-export default function PlaceCard({ place, onPress, variant = 'default', style }: Props) {
+export default function PlaceCard({ place, onPress, variant = 'compact', style }: Props) {
   const tr = useLocalized();
   const image = resolveImageUrl(place.coverImage || place.images?.[0]);
-  const isCompact = variant === 'compact';
+
+  if (variant === 'wide') {
+    return (
+      <TouchableOpacity
+        onPress={onPress}
+        activeOpacity={0.85}
+        style={[styles.wide, style]}
+      >
+        <View style={styles.wideImageWrap}>
+          <Image source={{ uri: image }} style={styles.wideImage} />
+        </View>
+        <View style={styles.wideInfo}>
+          <Text style={styles.wideName} numberOfLines={1}>
+            {tr(place.name)}
+          </Text>
+          <View style={styles.locationRow}>
+            <Ionicons name="location" size={12} color={palette.mediterraneanBlue} />
+            <Text style={styles.location} numberOfLines={1}>
+              {place.region}
+            </Text>
+          </View>
+        </View>
+        <Ionicons name="chevron-forward" size={20} color={palette.gray400} />
+      </TouchableOpacity>
+    );
+  }
 
   return (
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.85}
-      style={[styles.card, isCompact && styles.cardCompact, style]}
+      style={[styles.card, style]}
     >
-      <View>
-        <Image
-          source={{ uri: image }}
-          style={[styles.image, isCompact && styles.imageCompact]}
-        />
-        <FavoriteButton placeId={place._id} style={styles.favBtn} />
+      <View style={styles.imageWrap}>
+        <Image source={{ uri: image }} style={styles.image} />
+
+        {/* Rating pill — top-right overlay */}
+        <View style={styles.ratingOverlay}>
+          <Ionicons name="star" size={12} color={palette.gold} />
+          <Text style={styles.ratingText}>
+            {place.rating?.average?.toFixed(1) ?? '0.0'}
+          </Text>
+        </View>
+
+        {/* Favorite heart — top-left overlay */}
+        <FavoriteButton placeId={place._id} style={styles.favOverlay} size={18} />
       </View>
-      <View style={styles.body}>
-        <Text style={styles.title} numberOfLines={1}>
+
+      <View style={styles.info}>
+        <Text style={styles.name} numberOfLines={1}>
           {tr(place.name)}
         </Text>
-        {!isCompact && place.shortDescription && (
-          <Text style={styles.subtitle} numberOfLines={2}>
-            {tr(place.shortDescription)}
+        <View style={styles.locationRow}>
+          <Ionicons name="location" size={12} color={palette.mediterraneanBlue} />
+          <Text style={styles.location} numberOfLines={1}>
+            {place.region}
           </Text>
-        )}
-        <View style={styles.metaRow}>
-          <View style={styles.metaItem}>
-            <Ionicons name="star" size={14} color={palette.gold} />
-            <Text style={styles.metaText}>
-              {place.rating?.average?.toFixed(1) ?? '0.0'}
-              {place.rating?.count > 0 && (
-                <Text style={styles.metaMuted}> ({place.rating.count})</Text>
-              )}
-            </Text>
-          </View>
-          <View style={styles.metaItem}>
-            <Ionicons name="location-outline" size={14} color={palette.gray500} />
-            <Text style={styles.metaMuted} numberOfLines={1}>
-              {place.region}
-            </Text>
-          </View>
-          <Text style={styles.priceTag}>{PRICE_LABEL[place.priceLevel] || ''}</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -78,66 +92,82 @@ export default function PlaceCard({ place, onPress, variant = 'default', style }
 }
 
 const styles = StyleSheet.create({
+  // ── compact (carousel card) ────────────────────────────
   card: {
+    width: SCREEN_W * 0.7,
     backgroundColor: palette.white,
-    borderRadius: borderRadius.lg,
+    borderRadius: 16,
     overflow: 'hidden',
+    marginRight: spacing.base,
     ...shadows.sm,
   },
-  cardCompact: {
-    width: 220,
-  },
-  image: {
+  imageWrap: {
     width: '100%',
     height: 160,
     backgroundColor: palette.gray200,
+    position: 'relative',
   },
-  imageCompact: {
-    height: 130,
-  },
-  favBtn: {
+  image: { width: '100%', height: '100%' },
+  ratingOverlay: {
     position: 'absolute',
-    top: 8,
-    right: 8,
+    top: spacing.sm,
+    right: spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255,255,255,0.92)',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
   },
-  body: {
-    padding: spacing.md,
+  ratingText: { fontSize: 12, fontWeight: '700', color: palette.gray900 },
+  favOverlay: {
+    position: 'absolute',
+    top: spacing.sm,
+    left: spacing.sm,
   },
-  title: {
+  info: { padding: spacing.md },
+  name: {
     fontSize: 16,
     fontWeight: '700',
     color: palette.gray900,
-    marginBottom: 2,
+    marginBottom: 4,
   },
-  subtitle: {
-    fontSize: 13,
-    color: palette.gray500,
-    marginBottom: spacing.sm,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.md,
-  },
-  metaItem: {
+  locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
-  metaText: {
-    fontSize: 13,
-    color: palette.gray700,
-    fontWeight: '600',
-  },
-  metaMuted: {
+  location: {
     fontSize: 12,
     color: palette.gray500,
     textTransform: 'capitalize',
   },
-  priceTag: {
-    marginLeft: 'auto',
-    fontSize: 13,
+
+  // ── wide (list row) ────────────────────────────────────
+  wide: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: palette.white,
+    borderRadius: 16,
+    padding: spacing.sm,
+    marginBottom: spacing.sm,
+    ...shadows.sm,
+  },
+  wideImageWrap: {
+    width: 80,
+    height: 80,
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: palette.gray200,
+    marginRight: spacing.md,
+  },
+  wideImage: { width: '100%', height: '100%' },
+  wideInfo: { flex: 1 },
+  wideName: {
+    fontSize: 15,
     fontWeight: '700',
-    color: palette.olive,
+    color: palette.gray900,
+    marginBottom: 4,
   },
 });

@@ -10,7 +10,7 @@ const livingCostSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ['food', 'transport', 'accommodation', 'leisure', 'communication', 'other'],
+      enum: ['food', 'transport', 'accommodation', 'leisure', 'communication', 'shopping', 'other'],
       required: true,
       index: true,
     },

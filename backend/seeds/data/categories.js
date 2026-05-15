@@ -95,4 +95,16 @@ module.exports = [
     color: '#F4A261',
     order: 8,
   },
+  {
+    name: { fr: 'Hébergement', en: 'Accommodation', ar: 'الإقامة' },
+    slug: 'hebergement',
+    description: {
+      fr: 'Hôtels, riads, auberges, campings et lodges',
+      en: 'Hotels, riads, hostels, camps and lodges',
+      ar: 'الفنادق والرياض والنزل والمخيمات',
+    },
+    icon: 'bed',
+    color: '#7C3AED',
+    order: 9,
+  },
 ];

@@ -3,6 +3,7 @@ const Category = require('../models/Category');
 const ApiError = require('../utils/ApiError');
 const ApiResponse = require('../utils/ApiResponse');
 const catchAsync = require('../utils/catchAsync');
+const cloudinary = require('../services/cloudinaryService');
 
 const buildFilter = (query) => {
   const filter = { status: 'published' };
@@ -12,6 +13,12 @@ const buildFilter = (query) => {
   if (query.category) filter.category = query.category;
   if (query.region) filter.region = query.region;
   if (query.priceLevel) filter.priceLevel = query.priceLevel;
+  if (query.accommodationType) {
+    const types = Array.isArray(query.accommodationType)
+      ? query.accommodationType
+      : String(query.accommodationType).split(',').filter(Boolean);
+    filter.accommodationType = types.length === 1 ? types[0] : { $in: types };
+  }
   if (query.tags) {
     const tags = Array.isArray(query.tags) ? query.tags : query.tags.split(',');
     filter.tags = { $in: tags };
@@ -20,11 +27,16 @@ const buildFilter = (query) => {
     filter['rating.average'] = { $gte: parseFloat(query.minRating) };
   }
   if (query.search) {
-    const regex = new RegExp(query.search, 'i');
+    // Escape regex special chars so the user input cannot break the pattern
+    const escaped = String(query.search).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(escaped, 'i');
     filter.$or = [
       { 'name.fr': regex },
       { 'name.en': regex },
       { 'name.ar': regex },
+      { 'shortDescription.fr': regex },
+      { 'shortDescription.en': regex },
+      { address: regex },
     ];
   }
   return filter;
@@ -177,21 +189,33 @@ const deletePlace = catchAsync(async (req, res) => {
   ApiResponse.success(res, null, 'Place archived successfully');
 });
 
-// @desc    Upload place images
+// @desc    Upload place images (Cloudinary)
 // @route   POST /api/v1/places/:id/images
 // @access  Private/Admin
 const uploadPlaceImages = catchAsync(async (req, res) => {
   if (!req.files || req.files.length === 0) {
     throw ApiError.badRequest('Please upload at least one image');
   }
+  if (!cloudinary.isConfigured()) {
+    throw ApiError.internal('Cloudinary is not configured on the server');
+  }
 
   const place = await Place.findById(req.params.id);
   if (!place) throw ApiError.notFound('Place not found');
 
-  const newImages = req.files.map((f) => `/uploads/${f.filename}`);
-  place.images = [...place.images, ...newImages];
-  if (!place.coverImage && newImages.length > 0) {
-    place.coverImage = newImages[0];
+  const uploaded = await Promise.all(
+    req.files.map((f) =>
+      cloudinary.uploadBuffer(f.buffer, {
+        folder: `tunisia-tourism/places/${place.slug}`,
+        tags: ['place', place.slug],
+      })
+    )
+  );
+  const urls = uploaded.map((u) => u.url);
+
+  place.images = [...place.images, ...urls];
+  if (!place.coverImage && urls.length > 0) {
+    place.coverImage = urls[0];
   }
   await place.save();
 

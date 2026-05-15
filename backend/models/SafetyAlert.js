@@ -1,6 +1,16 @@
 const mongoose = require('mongoose');
 const { SEVERITY_LEVELS, REGIONS } = require('../config/constants');
 
+// Standalone GeoJSON sub-schema so alerts without a geofence simply omit the
+// field entirely (avoids `{ type: null }` sub-doc that breaks 2dsphere).
+const pointSchema = new mongoose.Schema(
+  {
+    type: { type: String, enum: ['Point'], required: true },
+    coordinates: { type: [Number], required: true },
+  },
+  { _id: false }
+);
+
 const safetyAlertSchema = new mongoose.Schema(
   {
     title: {
@@ -20,10 +30,8 @@ const safetyAlertSchema = new mongoose.Schema(
       index: true,
     },
     region: { type: String, enum: REGIONS, default: null, index: true },
-    location: {
-      type: { type: String, enum: ['Point'], default: null },
-      coordinates: { type: [Number], default: undefined },
-    },
+    // GeoJSON Point — completely optional (uses standalone sub-schema above).
+    location: pointSchema,
     radius: { type: Number, default: null }, // in meters
     expiresAt: { type: Date, default: null, index: true },
     active: { type: Boolean, default: true, index: true },

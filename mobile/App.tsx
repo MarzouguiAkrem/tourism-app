@@ -1,19 +1,20 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { StatusBar } from 'expo-status-bar';
+import React, { useEffect, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { NavigationContainer } from '@react-navigation/native';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 
 import { store, persistor } from './src/store';
 import RootNavigator from './src/navigation/RootNavigator';
-import { ThemeContext, lightTheme, palette } from './src/theme';
+import ThemedApp from './src/components/common/ThemedApp';
+import { palette } from './src/theme';
 import './src/i18n';
 
-// Keep splash screen visible while we load resources
-SplashScreen.preventAutoHideAsync();
+// Keep the Expo splash screen visible while we boot. If this throws (already
+// hidden on hot reload, web, etc.) we don't want to crash the bundle.
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
 function LoadingScreen() {
   return (
@@ -27,41 +28,48 @@ export default function App() {
   const [appIsReady, setAppIsReady] = useState(false);
 
   useEffect(() => {
-    async function prepare() {
+    let cancelled = false;
+    (async () => {
       try {
-        // Load fonts, initial data, etc. here in the future
-        // await Font.loadAsync({ ... });
+        // await Font.loadAsync({ ... })
       } catch (e) {
-        console.warn(e);
+        console.warn('[App] prepare error', e);
       } finally {
-        setAppIsReady(true);
+        if (!cancelled) setAppIsReady(true);
       }
-    }
-    prepare();
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const onLayoutRootView = useCallback(async () => {
-    if (appIsReady) {
-      await SplashScreen.hideAsync();
-    }
+  useEffect(() => {
+    if (!appIsReady) return;
+    SplashScreen.hideAsync().catch(() => {});
   }, [appIsReady]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      SplashScreen.hideAsync().catch(() => {});
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
   if (!appIsReady) {
     return null;
   }
 
   return (
-    <GestureHandlerRootView style={styles.root} onLayout={onLayoutRootView}>
-      <Provider store={store}>
-        <PersistGate loading={<LoadingScreen />} persistor={persistor}>
-          <ThemeContext.Provider value={{ theme: lightTheme, isDark: false }}>
-            <NavigationContainer>
+    <GestureHandlerRootView style={styles.root}>
+      <SafeAreaProvider>
+        <Provider store={store}>
+          <PersistGate loading={<LoadingScreen />} persistor={persistor}>
+            <ThemedApp>
               <RootNavigator />
-              <StatusBar style="dark" />
-            </NavigationContainer>
-          </ThemeContext.Provider>
-        </PersistGate>
-      </Provider>
+            </ThemedApp>
+          </PersistGate>
+        </Provider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }
