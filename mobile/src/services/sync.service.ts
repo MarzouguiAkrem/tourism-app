@@ -13,7 +13,6 @@ export interface SyncBundle {
     categories: any[];
     places: any[];
     cultural: any[];
-    lexicon: any[];
     livingCosts: any[];
     emergencyContacts: any[];
     safetyAlerts: any[];

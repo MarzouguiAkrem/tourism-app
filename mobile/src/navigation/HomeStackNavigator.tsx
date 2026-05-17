@@ -7,7 +7,6 @@ import PlaceDetailScreen from '../screens/places/PlaceDetailScreen';
 import PlacesByCategoryScreen from '../screens/places/PlacesByCategoryScreen';
 import CurrencyConverterScreen from '../screens/currency/CurrencyConverterScreen';
 import CulturalScreen from '../screens/cultural/CulturalScreen';
-import PhrasebookScreen from '../screens/cultural/PhrasebookScreen';
 import SafetyScreen from '../screens/safety/SafetyScreen';
 import SOSScreen from '../screens/safety/SOSScreen';
 import PricesScreen from '../screens/livingcost/PricesScreen';
@@ -23,7 +22,6 @@ export default function HomeStackNavigator() {
       <Stack.Screen name="PlacesByCategory" component={PlacesByCategoryScreen} />
       <Stack.Screen name="CurrencyConverter" component={CurrencyConverterScreen} />
       <Stack.Screen name="CulturalGuide" component={CulturalScreen} />
-      <Stack.Screen name="Phrasebook" component={PhrasebookScreen} />
       <Stack.Screen name="SafetyTips" component={SafetyScreen} />
       <Stack.Screen name="SOS" component={SOSScreen} />
       <Stack.Screen name="Prices" component={PricesScreen} />

@@ -49,7 +49,7 @@ module.exports = {
 
   SEVERITY_LEVELS: ['info', 'warning', 'danger'],
 
-  CULTURAL_TYPES: ['custom', 'etiquette', 'lexicon', 'tradition', 'cuisine'],
+  CULTURAL_TYPES: ['custom', 'etiquette', 'tradition', 'cuisine'],
 
   ITINERARY_STATUS: ['draft', 'active', 'completed'],
 

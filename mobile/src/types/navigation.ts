@@ -18,7 +18,6 @@ export type HomeStackParamList = {
   CulturalGuide: undefined;
   SafetyTips: undefined;
   SOS: undefined;
-  Phrasebook: undefined;
   Prices: undefined;
   Heritage: undefined;
 };

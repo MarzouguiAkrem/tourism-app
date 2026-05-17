@@ -1,12 +1,7 @@
 const CulturalContent = require('../models/CulturalContent');
-const LexiconEntry = require('../models/LexiconEntry');
 const ApiError = require('../utils/ApiError');
 const ApiResponse = require('../utils/ApiResponse');
 const catchAsync = require('../utils/catchAsync');
-
-// ────────────────────────────────────────────────────────────
-// Cultural content
-// ────────────────────────────────────────────────────────────
 
 const buildCulturalFilter = (q) => {
   const filter = {};
@@ -72,72 +67,10 @@ const deleteCultural = catchAsync(async (req, res) => {
   ApiResponse.success(res, null, 'Cultural content deleted');
 });
 
-// ────────────────────────────────────────────────────────────
-// Lexicon
-// ────────────────────────────────────────────────────────────
-
-const listLexicon = catchAsync(async (req, res) => {
-  const { page, limit, skip } = req.pagination;
-  const filter = { isActive: true };
-  if (req.query.category) filter.category = req.query.category;
-  if (req.query.search) {
-    const regex = new RegExp(req.query.search, 'i');
-    filter.$or = [
-      { 'word.fr': regex },
-      { 'word.en': regex },
-      { 'word.ar': regex },
-      { pronunciation: regex },
-    ];
-  }
-
-  const [items, total] = await Promise.all([
-    LexiconEntry.find(filter).sort('category order').skip(skip).limit(limit),
-    LexiconEntry.countDocuments(filter),
-  ]);
-
-  ApiResponse.paginated(res, items, {
-    page,
-    limit,
-    totalPages: Math.ceil(total / limit),
-    totalResults: total,
-  });
-});
-
-const getLexicon = catchAsync(async (req, res) => {
-  const item = await LexiconEntry.findById(req.params.id);
-  if (!item) throw ApiError.notFound('Lexicon entry not found');
-  ApiResponse.success(res, item);
-});
-
-const createLexicon = catchAsync(async (req, res) => {
-  const item = await LexiconEntry.create(req.body);
-  ApiResponse.created(res, item, 'Lexicon entry created');
-});
-
-const updateLexicon = catchAsync(async (req, res) => {
-  const item = await LexiconEntry.findByIdAndUpdate(req.params.id, req.body, {
-    returnDocument: 'after',
-    runValidators: true,
-  });
-  if (!item) throw ApiError.notFound('Lexicon entry not found');
-  ApiResponse.success(res, item, 'Lexicon entry updated');
-});
-
-const deleteLexicon = catchAsync(async (req, res) => {
-  const item = await LexiconEntry.findByIdAndDelete(req.params.id);
-  if (!item) throw ApiError.notFound('Lexicon entry not found');
-  ApiResponse.success(res, null, 'Lexicon entry deleted');
-});
-
 module.exports = {
   listCultural,
   getCultural,
   createCultural,
   updateCultural,
   deleteCultural,
-  listLexicon,
-  getLexicon,
-  createLexicon,
-  updateLexicon,
-  deleteLexicon,
 };

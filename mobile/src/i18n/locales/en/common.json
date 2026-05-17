@@ -46,7 +46,6 @@
   "currency": "Currency",
   "culture": "Culture",
   "safety": "Safety",
-  "phrasebook": "Phrasebook",
   "reviews": "Reviews",
   "writeReview": "Write a Review",
   "getDirections": "Get Directions",
@@ -189,19 +188,7 @@
     "custom": "Customs",
     "etiquette": "Etiquette",
     "tradition": "Traditions",
-    "cuisine": "Cuisine",
-    "lexicon": "Lexicon"
-  },
-  "lexiconCategories": {
-    "all": "All",
-    "greeting": "Greetings",
-    "food": "Food",
-    "directions": "Directions",
-    "shopping": "Shopping",
-    "emergency": "Emergency",
-    "numbers": "Numbers",
-    "time": "Time",
-    "general": "General"
+    "cuisine": "Cuisine"
   },
   "severityLevels": {
     "info": "Info",

@@ -46,7 +46,6 @@
   "currency": "Devises",
   "culture": "Culture",
   "safety": "S\u00e9curit\u00e9",
-  "phrasebook": "Lexique",
   "reviews": "Avis",
   "writeReview": "Donner un avis",
   "getDirections": "Itin\u00e9raire",
@@ -189,19 +188,7 @@
     "custom": "Coutumes",
     "etiquette": "Étiquette",
     "tradition": "Traditions",
-    "cuisine": "Cuisine",
-    "lexicon": "Lexique"
-  },
-  "lexiconCategories": {
-    "all": "Tout",
-    "greeting": "Salutations",
-    "food": "Nourriture",
-    "directions": "Directions",
-    "shopping": "Shopping",
-    "emergency": "Urgence",
-    "numbers": "Nombres",
-    "time": "Temps",
-    "general": "Général"
+    "cuisine": "Cuisine"
   },
   "severityLevels": {
     "info": "Info",

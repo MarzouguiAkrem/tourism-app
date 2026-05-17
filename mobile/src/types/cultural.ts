@@ -1,6 +1,6 @@
 import { Localized } from './place';
 
-export type CulturalType = 'custom' | 'etiquette' | 'lexicon' | 'tradition' | 'cuisine';
+export type CulturalType = 'custom' | 'etiquette' | 'tradition' | 'cuisine';
 
 export interface CulturalContent {
   _id: string;
@@ -17,25 +17,4 @@ export interface CulturalContent {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
-}
-
-export type LexiconCategory =
-  | 'greeting'
-  | 'food'
-  | 'directions'
-  | 'shopping'
-  | 'emergency'
-  | 'numbers'
-  | 'time'
-  | 'general';
-
-export interface LexiconEntry {
-  _id: string;
-  word: Localized;
-  pronunciation: string;
-  audio: string | null;
-  category: LexiconCategory;
-  example?: Localized;
-  order: number;
-  isActive: boolean;
 }

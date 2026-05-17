@@ -57,7 +57,6 @@ export const ENDPOINTS = {
   // Cultural
   CULTURAL: {
     BASE: '/cultural',
-    LEXICON: '/cultural/lexicon',
   },
 
   // Safety

@@ -61,9 +61,7 @@ export default function CulturalScreen() {
           <Ionicons name="arrow-back" size={24} color={palette.gray700} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t('culture')}</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('Phrasebook')} hitSlop={10}>
-          <Ionicons name="book" size={22} color={palette.mediterraneanBlue} />
-        </TouchableOpacity>
+        <View style={{ width: 24 }} />
       </View>
 
       <ScrollView

@@ -2,7 +2,6 @@ const crypto = require('crypto');
 const Place = require('../models/Place');
 const Category = require('../models/Category');
 const CulturalContent = require('../models/CulturalContent');
-const LexiconEntry = require('../models/LexiconEntry');
 const LivingCost = require('../models/LivingCost');
 const EmergencyContact = require('../models/EmergencyContact');
 const SafetyAlert = require('../models/SafetyAlert');
@@ -13,7 +12,6 @@ const ALL_RESOURCES = [
   'categories',
   'places',
   'cultural',
-  'lexicon',
   'livingCosts',
   'emergencyContacts',
   'safetyAlerts',
@@ -27,7 +25,6 @@ const collectBundle = async (regionFilter = null) => {
     categories,
     places,
     cultural,
-    lexicon,
     livingCosts,
     emergencyContacts,
     safetyAlerts,
@@ -35,7 +32,6 @@ const collectBundle = async (regionFilter = null) => {
     Category.find({ isActive: true }).lean(),
     Place.find(placeFilter).lean(),
     CulturalContent.find({ isActive: true }).lean(),
-    LexiconEntry.find({ isActive: true }).lean(),
     LivingCost.find({ isActive: true }).lean(),
     EmergencyContact.find({ isActive: true }).lean(),
     SafetyAlert.find({
@@ -44,7 +40,7 @@ const collectBundle = async (regionFilter = null) => {
     }).lean(),
   ]);
 
-  return { categories, places, cultural, lexicon, livingCosts, emergencyContacts, safetyAlerts };
+  return { categories, places, cultural, livingCosts, emergencyContacts, safetyAlerts };
 };
 
 const hashBundle = (bundle) => {
@@ -111,7 +107,6 @@ const delta = catchAsync(async (req, res) => {
     categories: () => Category.find(updatedFilter).lean(),
     places: () => Place.find({ ...updatedFilter, status: { $ne: 'archived' } }).lean(),
     cultural: () => CulturalContent.find(updatedFilter).lean(),
-    lexicon: () => LexiconEntry.find(updatedFilter).lean(),
     livingCosts: () => LivingCost.find(updatedFilter).lean(),
     emergencyContacts: () => EmergencyContact.find(updatedFilter).lean(),
     safetyAlerts: () =>

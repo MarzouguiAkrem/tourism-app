@@ -5,7 +5,6 @@ const connectDB = require('../config/db');
 const Category = require('../models/Category');
 const Place = require('../models/Place');
 const CulturalContent = require('../models/CulturalContent');
-const LexiconEntry = require('../models/LexiconEntry');
 const EmergencyContact = require('../models/EmergencyContact');
 const LivingCost = require('../models/LivingCost');
 const SafetyAlert = require('../models/SafetyAlert');
@@ -15,7 +14,6 @@ const categoriesData = require('./data/categories');
 const placesData = require('./data/places');
 const placeImages = require('./data/placeImages');
 const culturalData = require('./data/cultural');
-const lexiconData = require('./data/lexicon');
 const emergencyData = require('./data/emergencyContacts');
 const livingCostsData = require('./data/livingCosts');
 const safetyAlertsData = require('./data/safetyAlerts');
@@ -54,7 +52,6 @@ const runSeed = async () => {
       Category.deleteMany({}),
       Place.deleteMany({}),
       CulturalContent.deleteMany({}),
-      LexiconEntry.deleteMany({}),
       EmergencyContact.deleteMany({}),
       LivingCost.deleteMany({}),
       SafetyAlert.deleteMany({}),
@@ -100,10 +97,6 @@ const runSeed = async () => {
     console.log('→ Seeding cultural content...');
     const cultural = await CulturalContent.insertMany(culturalData);
     console.log(`  ${cultural.length} cultural items inserted`);
-
-    console.log('→ Seeding lexicon...');
-    const lexicon = await LexiconEntry.insertMany(lexiconData);
-    console.log(`  ${lexicon.length} lexicon entries inserted`);
 
     console.log('→ Seeding emergency contacts...');
     const emergency = await EmergencyContact.insertMany(emergencyData);

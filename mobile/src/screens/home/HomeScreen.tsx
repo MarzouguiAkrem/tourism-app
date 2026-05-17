@@ -196,8 +196,6 @@ export default function HomeScreen({ navigation }: HomeScreenProps<'HomeMain'>) 
             <View style={styles.tilesGrid}>
               <QuickTile icon="people" label={t('culture')} color={palette.terracotta}
                 onPress={() => navigation.navigate('CulturalGuide')} />
-              <QuickTile icon="book" label={t('phrasebook')} color={palette.olive}
-                onPress={() => navigation.navigate('Phrasebook')} />
               <QuickTile icon="shield-checkmark" label={t('safety')} color={palette.mediterraneanBlue}
                 onPress={() => navigation.navigate('SafetyTips')} />
               <QuickTile icon="pricetag" label={t('prices')} color={palette.gold}
