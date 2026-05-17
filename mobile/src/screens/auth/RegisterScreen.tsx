@@ -87,7 +87,7 @@ export default function RegisterScreen({ navigation }: AuthScreenProps<'Register
 
           {/* Logo */}
           <View style={{ alignItems: 'center', marginBottom: spacing.base }}>
-            <AppLogo size={80} />
+            <AppLogo size={160} />
           </View>
 
           {/* Header */}

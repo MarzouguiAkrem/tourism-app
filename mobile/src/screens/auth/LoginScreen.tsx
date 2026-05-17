@@ -51,8 +51,8 @@ export default function LoginScreen({ navigation }: AuthScreenProps<'Login'>) {
         >
           {/* Logo / Header */}
           <View style={styles.header}>
-            <AppLogo size={120} style={{ marginBottom: spacing.base }} />
-            <Text style={styles.title}>Tunisia Travel</Text>
+            <AppLogo size={200} style={{ marginBottom: spacing.base }} />
+            <Text style={styles.title}>Smart Tunisia Explore</Text>
             <Text style={styles.subtitle}>{t('welcome')}</Text>
           </View>
 

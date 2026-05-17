@@ -8,7 +8,7 @@ interface Props {
 }
 
 /**
- * App logo (Tunisia Travel — the rounded illustration with the Sidi Bou Said
+ * App logo (Smart Tunisia Explore — the rounded illustration with the Sidi Bou Said
  * door, crescent moon and Sahara dune). Loaded from the static bundle so it's
  * available offline.
  */

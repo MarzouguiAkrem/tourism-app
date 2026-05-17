@@ -100,6 +100,7 @@ export interface PlaceFilters {
   sort?: string;
   page?: number;
   limit?: number;
+  status?: PlaceStatus | 'all';
 }
 
 export interface NearbyQuery {

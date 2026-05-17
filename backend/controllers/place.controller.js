@@ -7,7 +7,9 @@ const cloudinary = require('../services/cloudinaryService');
 
 const buildFilter = (query) => {
   const filter = { status: 'published' };
-  if (query.status && ['published', 'draft', 'archived'].includes(query.status)) {
+  if (query.status === 'all') {
+    delete filter.status;
+  } else if (query.status && ['published', 'draft', 'archived'].includes(query.status)) {
     filter.status = query.status;
   }
   if (query.category) filter.category = query.category;

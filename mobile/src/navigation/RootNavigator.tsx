@@ -22,7 +22,7 @@ function SplashLoading() {
   return (
     <View style={styles.loading}>
       <AppLogo size={140} style={{ marginBottom: 16 }} />
-      <Text style={styles.splashTitle}>Tunisia Travel</Text>
+      <Text style={styles.splashTitle}>Smart Tunisia Explore</Text>
       <ActivityIndicator
         size="small"
         color={palette.mediterraneanBlue}

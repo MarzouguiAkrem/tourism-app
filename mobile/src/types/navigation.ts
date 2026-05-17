@@ -59,6 +59,8 @@ export type AdminStackParamList = {
   AdminAlerts: undefined;
   AdminAlertForm: { alertId?: string };
   AdminFeedbackList: undefined;
+  AdminPlaces: undefined;
+  AdminPlaceForm: { placeId?: string };
 };
 
 // Main Tab Navigator

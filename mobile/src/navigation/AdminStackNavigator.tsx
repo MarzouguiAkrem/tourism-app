@@ -9,6 +9,8 @@ import AdminUserFormScreen from '../screens/admin/AdminUserFormScreen';
 import AdminAlertsScreen from '../screens/admin/AdminAlertsScreen';
 import AdminAlertFormScreen from '../screens/admin/AdminAlertFormScreen';
 import AdminFeedbackListScreen from '../screens/admin/AdminFeedbackListScreen';
+import AdminPlacesScreen from '../screens/admin/AdminPlacesScreen';
+import AdminPlaceFormScreen from '../screens/admin/AdminPlaceFormScreen';
 
 const Stack = createNativeStackNavigator<AdminStackParamList>();
 
@@ -22,6 +24,8 @@ export default function AdminStackNavigator() {
       <Stack.Screen name="AdminAlerts" component={AdminAlertsScreen} />
       <Stack.Screen name="AdminAlertForm" component={AdminAlertFormScreen} />
       <Stack.Screen name="AdminFeedbackList" component={AdminFeedbackListScreen} />
+      <Stack.Screen name="AdminPlaces" component={AdminPlacesScreen} />
+      <Stack.Screen name="AdminPlaceForm" component={AdminPlaceFormScreen} />
     </Stack.Navigator>
   );
 }

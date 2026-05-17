@@ -77,6 +77,9 @@ export default function AdminDashboardScreen() {
           <TouchableOpacity onPress={() => navigation.navigate('AdminUsers')} hitSlop={10}>
             <Ionicons name="people" size={22} color={palette.mediterraneanBlue} />
           </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('AdminPlaces')} hitSlop={10}>
+            <Ionicons name="location" size={22} color={palette.mediterraneanBlue} />
+          </TouchableOpacity>
           <TouchableOpacity onPress={() => navigation.navigate('AdminAlerts')} hitSlop={10}>
             <Ionicons name="warning" size={22} color={palette.mediterraneanBlue} />
           </TouchableOpacity>
@@ -118,9 +121,7 @@ export default function AdminDashboardScreen() {
             sub={`${overview?.places.published ?? 0} ${t('publishedShort')}`}
             icon="location"
             color={palette.terracotta}
-            onPress={() =>
-              navigation.getParent()?.navigate('Main', { screen: 'Explore' })
-            }
+            onPress={() => navigation.navigate('AdminPlaces')}
           />
           <StatCard
             label={t('reviews')}
