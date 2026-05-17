@@ -1,6 +1,11 @@
 import { Platform, NativeModules } from 'react-native';
 
-// Fallback IP if we cannot auto-detect from the Metro bundler URL
+// Public tunnel URL (Cloudflare Quick Tunnel) — works for any device, any network.
+// Update this when you restart `cloudflared tunnel --url http://localhost:5000`.
+// Leave empty ('') to fall back to LAN IP (same-WiFi devices only).
+const PUBLIC_TUNNEL_URL = 'https://hydrogen-bernard-savannah-emotions.trycloudflare.com';
+
+// Fallback IP if no tunnel is set and Metro bundler URL can't be auto-detected
 const FALLBACK_LOCAL_IP = '192.168.1.125';
 const API_PORT = 5000;
 
@@ -15,6 +20,9 @@ const getDevHost = (): string | null => {
 
 const getBaseUrl = (): string => {
   if (__DEV__) {
+    if (PUBLIC_TUNNEL_URL) {
+      return `${PUBLIC_TUNNEL_URL}/api/v1`;
+    }
     if (Platform.OS === 'web') {
       return `http://localhost:${API_PORT}/api/v1`;
     }
