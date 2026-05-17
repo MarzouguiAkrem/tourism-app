@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
+  ImageBackground,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,6 +25,8 @@ import CurrencyWidget from '../../components/data-display/CurrencyWidget';
 import SearchBar from '../../components/common/SearchBar';
 import { HomeScreenProps } from '../../types/navigation';
 import { Image } from 'react-native';
+
+const headerBanner = require('../../../assets/images/header.png');
 
 export default function HomeScreen({ navigation }: HomeScreenProps<'HomeMain'>) {
   const { t } = useTranslation();
@@ -73,31 +76,38 @@ export default function HomeScreen({ navigation }: HomeScreenProps<'HomeMain'>) 
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* Header: avatar + welcome + bell */}
-        <View style={styles.header}>
-          <View style={styles.userBlock}>
-            <View style={styles.avatarRing}>
-              {user?.avatar ? (
-                <Image
-                  source={{ uri: resolveImageUrl(user.avatar) }}
-                  style={styles.avatar}
-                />
-              ) : (
-                <View style={[styles.avatar, styles.avatarFallback]}>
-                  <Text style={styles.avatarInitials}>
-                    {(user?.firstName?.[0] || '?').toUpperCase()}
-                  </Text>
-                </View>
-              )}
-            </View>
-            <View>
-              <Text style={styles.welcomeMuted}>{t('welcome')}</Text>
-              <Text style={styles.welcomeName}>
-                {user?.firstName ? `Hi, ${user.firstName}` : t('appName')}
-              </Text>
+        {/* Header banner with greeting overlay */}
+        <ImageBackground
+          source={headerBanner}
+          style={styles.headerBanner}
+          imageStyle={styles.headerBannerImage}
+          resizeMode="cover"
+        >
+          <View style={styles.headerOverlay}>
+            <View style={styles.userBlock}>
+              <View style={styles.avatarRing}>
+                {user?.avatar ? (
+                  <Image
+                    source={{ uri: resolveImageUrl(user.avatar) }}
+                    style={styles.avatar}
+                  />
+                ) : (
+                  <View style={[styles.avatar, styles.avatarFallback]}>
+                    <Text style={styles.avatarInitials}>
+                      {(user?.firstName?.[0] || '?').toUpperCase()}
+                    </Text>
+                  </View>
+                )}
+              </View>
+              <View>
+                <Text style={styles.welcomeMutedOnImage}>{t('welcome')}</Text>
+                <Text style={styles.welcomeNameOnImage}>
+                  {user?.firstName ? `Hi, ${user.firstName}` : t('appName')}
+                </Text>
+              </View>
             </View>
           </View>
-        </View>
+        </ImageBackground>
 
         {/* Hero question + search */}
         <View style={styles.heroBlock}>
@@ -244,13 +254,38 @@ const styles = StyleSheet.create({
   content: { paddingBottom: spacing['3xl'] },
 
   // ── Header ─────────────────────────────────────────────
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  headerBanner: {
+    width: '100%',
+    height: 180,
+    marginBottom: spacing.lg,
+  },
+  headerBannerImage: {
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+  },
+  headerOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.base,
     paddingBottom: spacing.lg,
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+  },
+  welcomeMutedOnImage: {
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.85)',
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  welcomeNameOnImage: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: palette.white,
+    textShadowColor: 'rgba(0,0,0,0.6)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
   userBlock: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   avatarRing: {
@@ -259,6 +294,8 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     overflow: 'hidden',
     backgroundColor: palette.gray100,
+    borderWidth: 2,
+    borderColor: palette.white,
   },
   avatar: { width: '100%', height: '100%' },
   avatarFallback: {
@@ -267,16 +304,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   avatarInitials: { color: palette.white, fontSize: 18, fontWeight: '700' },
-  welcomeMuted: { fontSize: 13, color: palette.gray500 },
-  welcomeName: { fontSize: 16, fontWeight: '700', color: palette.gray900 },
-  bellBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: palette.gray100,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
 
   // ── Hero ───────────────────────────────────────────────
   heroBlock: { paddingHorizontal: spacing.xl, marginBottom: spacing.lg },
