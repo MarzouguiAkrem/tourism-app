@@ -3,7 +3,7 @@ import { Platform, NativeModules } from 'react-native';
 // Public tunnel URL (Cloudflare Quick Tunnel) — works for any device, any network.
 // Update this when you restart `cloudflared tunnel --url http://localhost:5000`.
 // Leave empty ('') to fall back to LAN IP (same-WiFi devices only).
-const PUBLIC_TUNNEL_URL = 'https://coastal-scanner-downloadable-encouraging.trycloudflare.com';
+const PUBLIC_TUNNEL_URL = 'https://stopping-represent-internal-lakes.trycloudflare.com';
 
 // Fallback IP if no tunnel is set and Metro bundler URL can't be auto-detected
 const FALLBACK_LOCAL_IP = '192.168.1.125';
